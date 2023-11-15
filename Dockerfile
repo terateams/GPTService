@@ -7,7 +7,6 @@ WORKDIR /app
 # 将项目文件复制到工作目录
 COPY apps /app/libs
 COPY ./main.py /app/main.py
-COPY ./webapi.py /app/webapi.py
 COPY ./requirements.txt /app/requirements.txt
 
 # 安装项目依赖
