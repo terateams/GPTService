@@ -1,0 +1,12 @@
+fastapi
+pydantic
+python-dotenv
+uvicorn
+tiktoken
+openai
+starlette
+PyMuPDF
+semantic_kernel
+langchain
+chromadb
+qdrant-client

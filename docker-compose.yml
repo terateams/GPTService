@@ -1,0 +1,31 @@
+version: "3"
+services:
+  gptservice:
+    container_name: "gptservice"
+    image: talkincode/gptservice:latest
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+    environment:
+        - API_KEY=${API_KEY}
+        - OPENAI_API_TYPE=${OPENAI_API_TYPE}
+        - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+        - AZURE_OPENAI_API_BASE=${AZURE_OPENAI_API_BASE}
+        - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+        - OPENAI_API_KEY=${OPENAI_API_KEY}
+        - QDRANT_URL=${QDRANT_URL}
+        - DATA_DIR=/data
+    volumes:
+      - gptservice-volume:/data
+    ports:
+      - "8888:8700"
+    command: ["uvicorn", "--host","0.0.0.0","main:apps"]
+    networks:
+      gptservice_network:
+
+networks:
+  gptservice_network:
+
+volumes:
+  gptservice-volume:
