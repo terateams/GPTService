@@ -1,6 +1,8 @@
 # 使用官方的 Python 基础镜像
 FROM python:3.12.0-alpine3.18
 
+RUN apk add --no-cache build-base
+
 # 设置工作目录
 WORKDIR /app
 
