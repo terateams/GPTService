@@ -13,7 +13,7 @@ COPY ./requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 暴露端口
-EXPOSE 8000
+EXPOSE 8700
 
 # 设置启动命令
 CMD ["uvicorn","main:app"]
