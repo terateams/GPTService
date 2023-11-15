@@ -7,7 +7,7 @@ RUN apk add --no-cache build-base
 WORKDIR /app
 
 # 将项目文件复制到工作目录
-COPY apps /app/libs
+COPY apps /app/apps
 COPY ./main.py /app/main.py
 COPY ./requirements.txt /app/requirements.txt
 
