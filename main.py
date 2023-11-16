@@ -24,7 +24,7 @@ if not os.path.exists(DATA_DIR):
 
 
 class LimitUploadSize(BaseHTTPMiddleware):
-    """限制上传文件大小"""
+    """Limit the upload file size"""
 
     def __init__(self, app: ASGIApp, max_upload_size: int) -> None:
         super().__init__(app)
