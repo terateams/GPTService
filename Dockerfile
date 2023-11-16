@@ -2,11 +2,11 @@
 FROM condaforge/mambaforge:latest
 
 # 设置工作目录
-WORKDIR /app
+WORKDIR /
 
 # 将项目文件复制到工作目录
-COPY apps /app/
-COPY ./main.py /app/main.py
+COPY apps /
+COPY ./main.py /main.py
 COPY ./requirements.txt /app/requirements.txt
 
 # 安装项目依赖
