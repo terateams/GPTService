@@ -88,7 +88,6 @@ class QdrantIndex(object):
             url=self.qdrant_url,
             prefer_grpc=self.qdrant_grpc,
             collection_name=collection,
-            force_recreate=True,
         )
 
 
