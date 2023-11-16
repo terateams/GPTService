@@ -46,6 +46,7 @@ app = FastAPI(
     version="1.0.0",
     servers=[
         {"url": os.environ.get("GPTS_API_SERVER"), "description": "Production server"},
+        {"url": "http://127.0.0.1:8700", "description": "Develop server"},
     ]
 )
 
@@ -77,6 +78,11 @@ class IndexSearchItem(BaseModel):
     query: str = Field(title="Query content", description="Query the text content of the knowledge base index store")
 
 
+class IndexDeleteItem(BaseModel):
+    collection: str = Field("", title="Collection name",
+                            description="The name of the knowledge base index store")
+
+
 class TokenItem(BaseModel):
     text: str = Field(title="Text content", description="The stored text content to be vectorized")
     encoding: str = Field("cl100k_base", title="Encoding", description="Encoding, defaults cl100k_base")
@@ -102,7 +108,7 @@ def verify_api_key(api_key: str = Depends(api_key_header)):
     return TokenData(api_key=api_key)
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def root():
     return "ok"
 
@@ -165,6 +171,27 @@ async def search_index(item: IndexSearchItem, td: TokenData = Depends(verify_api
     try:
         result = await qdrant.search(item.collection, item.query)
         return RestResult(code=0, msg="ok", result=dict(data=result))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/knowledge/list", summary="List the knowledge base",
+          description="List the knowledge base")
+async def search_index(td: TokenData = Depends(verify_api_key)):
+    """Search the knowledge base to return relevant content"""
+    try:
+        result = await qdrant.list_index()
+        return RestResult(code=0, msg="success", result=dict(data=result))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/knowledge/delete", include_in_schema=False)
+async def search_index(item: IndexDeleteItem, td: TokenData = Depends(verify_api_key)):
+    """Search the knowledge base to return relevant content"""
+    try:
+        qdrant.delete(item.collection)
+        return RestResult(code=0, msg="success")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

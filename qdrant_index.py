@@ -36,6 +36,23 @@ class QdrantIndex(object):
                 data.append(dict(content=doc.page_content, metadata=doc.metadata, score=score))
         return data
 
+    async def delete(self, collection):
+        """delete the knowledge base content index"""
+        client = qdrant_client.QdrantClient(
+            url=self.qdrant_url, prefer_grpc=self.qdrant_grpc
+        )
+        client.delete_collection(collection_name=collection)
+        client.close()
+
+    async def list_index(self):
+        """delete the knowledge base content index"""
+        client = qdrant_client.QdrantClient(
+            url=self.qdrant_url, prefer_grpc=self.qdrant_grpc
+        )
+        resp = client.get_collections()
+        client.close()
+        return resp
+
     async def index_text_from_url(self, collection, url, chunk_size=100, chunk_overlap=0):
         """Create a knowledge base content index from web url"""
         loader = WebBaseLoader(url)
