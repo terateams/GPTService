@@ -12,7 +12,14 @@ Authorization: Bearer myapikey
 
 {
   "collection": "tangshi-4",
-  "text": "Docker容器运行的时候有host、bridge、none三种网络可供配置。默认是bridge，即桥接网络，以桥接模式连接到宿主机；host是宿主网络，即与宿主机共用网络；none则表示无网络，容器将无法联网。"
+  "metadatas": [
+    {
+      "tag": "network"
+    }
+  ],
+  "texts": [
+    "Docker容器运行的时候有host、bridge、none三种网络可供配置。默认是bridge，即桥接网络，以桥接模式连接到宿主机；host是宿主网络，即与宿主机共用网络；none则表示无网络，容器将无法联网。"
+  ]
 }
 
 ###
@@ -22,7 +29,10 @@ Accept: application/json
 Content-Type: application/json
 Authorization: Bearer myapikey
 
- {"collection": "tangshi-4", "query": "多令，同柳阜之、刘去非、石民瞻、周嘉仲、陈孟参、孟容"}
+{
+  "collection": "tangshi-4",
+  "query": "多令，同柳阜之、刘去非、石民瞻、周嘉仲、陈孟参、孟容"
+}
 
 ###
 
@@ -31,7 +41,10 @@ Accept: application/json
 Content-Type: application/json
 Authorization: Bearer myapikey
 
- {"collection": "tangshi-4", "query": "主机"}
+{
+  "collection": "tangshi-4",
+  "query": "主机"
+}
 
 ###
 
@@ -40,4 +53,6 @@ Accept: application/json
 Content-Type: application/json
 Authorization: Bearer myapikey
 
-{"text": "多令，同柳阜之、刘去非、石民瞻、周嘉仲、陈孟参、孟容"}
+{
+  "text": "多令，同柳阜之、刘去非、石民瞻、周嘉仲、陈孟参、孟容"
+}

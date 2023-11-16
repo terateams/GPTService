@@ -54,7 +54,8 @@ class TokenData(BaseModel):
 
 class IndexItem(BaseModel):
     collection: str = Field("default", title="Collection name", description="Collection name")
-    text: str = Field(title="Textual content", description="The stored text content to be vectorized")
+    texts: list = Field([], title="Textual content list", description="The stored text content list to be vectorized")
+    metadatas: list = Field([], title="Metadata list", description="Metadata list, structured data")
     type: str = Field("text", title="The type of text",
                       description="Text type, text: text,webbase: web page, webpdf: web page pdf")
     url: str = Field("", title="Web page url",
@@ -120,7 +121,7 @@ async def create_index(item: IndexItem, td: TokenData = Depends(verify_api_key))
     """Create a knowledge base content index"""
     try:
         if item.type == "text":
-            await qdrant.index_text(item.collection, item.text, item.chunk_size, item.chunk_overlap)
+            await qdrant.index_texts(item.collection, item.texts,item.metadatas, item.chunk_size, item.chunk_overlap)
         elif item.type == "webbase":
             await qdrant.index_text_from_url(item.collection, item.url, item.chunk_size, item.chunk_overlap)
         elif item.type == "webpdf":

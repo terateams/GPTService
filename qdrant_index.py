@@ -6,6 +6,7 @@ from langchain.vectorstores import Qdrant
 from langchain.document_loaders import PyMuPDFLoader
 from common import document_spliter_len
 from qdrant_client import qdrant_client
+from hashlib import md5
 
 
 class QdrantIndex(object):
@@ -41,9 +42,11 @@ class QdrantIndex(object):
                                                        chunk_overlap=chunk_overlap,
                                                        length_function=document_spliter_len)
         docs = text_splitter.split_documents(documents)
+        ids = [md5(t.page_content.encode()).hexdigest() for t in docs]
         embeddings = OpenAIEmbeddings()
         await Qdrant.afrom_documents(
             docs, embeddings,
+            ids=ids,
             url=self.qdrant_url,
             prefer_grpc=self.qdrant_grpc,
             collection_name=collection,
@@ -57,28 +60,33 @@ class QdrantIndex(object):
                                                        chunk_overlap=chunk_overlap,
                                                        length_function=document_spliter_len)
         docs = text_splitter.split_documents(documents)
+        ids = [md5(t.page_content.encode()).hexdigest() for t in docs]
         embeddings = OpenAIEmbeddings()
         await Qdrant.afrom_documents(
             docs, embeddings,
+            ids=ids,
             url=self.qdrant_url,
             prefer_grpc=self.qdrant_grpc,
             collection_name=collection,
         )
 
-    async def index_text(self, collection, text, chunk_size=1000, chunk_overlap=0):
+    async def index_texts(self, collection, texts: list, metadatas: list, chunk_size=2000, chunk_overlap=0):
         """Create a knowledge base content index from text"""
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             length_function=document_spliter_len
         )
-        docs = text_splitter.create_documents([text])
+        docs = text_splitter.create_documents(texts, metadatas)
+        ids = [md5(t.page_content.encode()).hexdigest() for t in docs]
         embeddings = OpenAIEmbeddings()
         await Qdrant.afrom_documents(
             docs, embeddings,
+            ids=ids,
             url=self.qdrant_url,
             prefer_grpc=self.qdrant_grpc,
             collection_name=collection,
+            force_recreate=True,
         )
 
 
