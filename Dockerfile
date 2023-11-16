@@ -6,7 +6,7 @@ WORKDIR /
 
 # 将项目文件复制到工作目录
 COPY libs /
-COPY ./main.py /main.py
+COPY ./main.py /
 COPY ./requirements.txt /requirements.txt
 
 # 安装项目依赖
