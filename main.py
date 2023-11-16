@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 import logging
 import os
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.responses import HTMLResponse
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
 from starlette import status
@@ -106,23 +107,25 @@ async def root():
     return "ok"
 
 
-@app.get("/privacy")
+@app.get("/privacy", response_class=HTMLResponse)
 async def root():
     return """
-Privacy Statement
-
-Respecting User Privacy: Our custom GPTS API service is committed to respecting user privacy. We do not collect or store any personal information from users.
-
-Data Processing: Any data sent by users through the API is only used for processing specific requests and is immediately deleted from our systems upon completion.
-
-Transparency: We promise to maintain transparency in our processing and will not use user data for any purpose other than request processing.
-
-Security: We take all reasonable measures to ensure the security of user data and to prevent unauthorized access or disclosure.
-
-Policy Changes: Any changes to this privacy policy will be updated on our website.
-
-Contact Us: If you have any questions about our privacy policy, please contact us at [jamiesun.net@gmail.com].
+    <html>
+        <head>
+            <title>Privacy Statement</title>
+        </head>
+        <body>
+            <h1>Privacy Statement</h1>
+            <p><strong>Respecting User Privacy:</strong> Our custom GPTS API service is committed to respecting user privacy. We do not collect or store any personal information from users.</p>
+            <p><strong>Data Processing:</strong> Any data sent by users through the API is only used for processing specific requests and is immediately deleted from our systems upon completion.</p>
+            <p><strong>Transparency:</strong> We promise to maintain transparency in our processing and will not use user data for any purpose other than request processing.</p>
+            <p><strong>Security:</strong> We take all reasonable measures to ensure the security of user data and to prevent unauthorized access or disclosure.</p>
+            <p><strong>Policy Changes:</strong> Any changes to this privacy policy will be updated on our website.</p>
+            <p><strong>Contact Us:</strong> If you have any questions about our privacy policy, please contact us at <a href="mailto:jamiesun.net@gmail.com">jamiesun.net@gmail.com</a>.</p>
+        </body>
+    </html>
     """
+
 
 
 @app.post("/token/stat", summary="Count the number of tokens in the text",
