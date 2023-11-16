@@ -1,19 +1,19 @@
-# 使用官方的 Python 基础镜像
 FROM condaforge/mambaforge:latest
 
-# 设置工作目录
+# Set up a working directory
 WORKDIR /
 
-# 将项目文件复制到工作目录
-COPY libs /
+# Copy the project files to the working directory
 COPY ./main.py /
+COPY ./common.py /
+COPY ./qdrant_index.py /
 COPY ./requirements.txt /requirements.txt
 
-# 安装项目依赖
+# Install project dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 暴露端口
+# Expose the port
 EXPOSE 8700
 
-# 设置启动命令
+# Set the launch command
 CMD ["uvicorn","main:app"]

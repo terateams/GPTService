@@ -4,17 +4,20 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Qdrant
 from langchain.document_loaders import PyMuPDFLoader
-from .common import document_spliter_len
+from common import document_spliter_len
 from qdrant_client import qdrant_client
 
 
 class QdrantIndex(object):
+    """Qdrant index"""
 
     def __init__(self):
+        """Initialize the Qdrant index"""
         self.qdrant_url = os.environ.get("QDRANT_URL")
         self.qdrant_grpc = os.environ.get("QDRANT_GRPC") in ["1", "true", "True", "TRUE"]
 
     async def search(self, collection, text, topk=3):
+        """Search the knowledge base content index"""
         client = qdrant_client.QdrantClient(
             url=self.qdrant_url, prefer_grpc=self.qdrant_grpc
         )
@@ -31,6 +34,7 @@ class QdrantIndex(object):
         return data
 
     async def index_text_from_url(self, collection, url, chunk_size=100, chunk_overlap=0):
+        """Create a knowledge base content index from web url"""
         loader = WebBaseLoader(url)
         documents = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,
@@ -46,6 +50,7 @@ class QdrantIndex(object):
         )
 
     async def index_pdf_from_path(self, collection, pdffile, chunk_size=1000, chunk_overlap=0):
+        """Create a knowledge base content index from pdf file"""
         loader = PyMuPDFLoader(pdffile)
         documents = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size,
@@ -61,6 +66,7 @@ class QdrantIndex(object):
         )
 
     async def index_text(self, collection, text, chunk_size=1000, chunk_overlap=0):
+        """Create a knowledge base content index from text"""
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,

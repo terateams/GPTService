@@ -12,8 +12,8 @@ from starlette.types import ASGIApp
 
 load_dotenv()
 
-from libs.common import num_tokens_from_string
-from libs.qdrant_index import qdrant
+from common import num_tokens_from_string
+from qdrant_index import qdrant
 
 
 log = logging.getLogger(__name__)
@@ -53,29 +53,36 @@ class TokenData(BaseModel):
 
 
 class IndexItem(BaseModel):
-    collection: str = Field("default", title="索引名称", description="索引名称")
-    text: str = Field(title="文本内容", description="要向量化存储的文本内容")
-    type: str = Field("text", title="文本类型", description="文本类型, text: 文本, webbase: 网页, webpdf: 网页PDF")
-    url: str = Field("", title="网页地址", description="网页地址, 当type为webbase或webpdf时, 此项必填")
-    separator: str = Field("\n\n", title="分隔符", description="分隔符, 处理文本时如何切分")
-    chunk_size: int = Field(2000, title="切分大小", description="切分大小, 处理文本时每段的大小")
-    chunk_overlap: int = Field(0, title="切分重叠", description="切分重叠, 处理文本时每段的重叠大小")
+    collection: str = Field("default", title="Collection name", description="Collection name")
+    text: str = Field(title="Textual content", description="The stored text content to be vectorized")
+    type: str = Field("text", title="The type of text",
+                      description="Text type, text: text,webbase: web page, webpdf: web page pdf")
+    url: str = Field("", title="Web page url",
+                     description="Web address, which is required when type is webbase or webpdf")
+    separator: str = Field("\n\n", title="Separator", description="Separators, how to cut text when it is processed")
+    chunk_size: int = Field(2000, title="Slice size",
+                            description="Split size, the size of each segment when processing text")
+    chunk_overlap: int = Field(0, title="Split overlap",
+                               description="Split overlap, the size of the overlap of each segment when processing text")
 
 
 class IndexSearchItem(BaseModel):
-    collection: str = Field("default", title="索引名称", description="知识库索引存储名称")
-    query: str = Field(title="查询内容", description="查询文本内容")
+    collection: str = Field("default", title="Collection name", description="The name of the knowledge base index store")
+    query: str = Field(title="Query content", description="Query the text content of the knowledge base index store")
 
 
 class TokenItem(BaseModel):
-    text: str = Field(title="文本内容", description="要向量化存储的文本内容")
-    encoding: str = Field("cl100k_base", title="编码", description="编码, 默认为cl100k_base")
+    text: str = Field(title="Text content", description="The stored text content to be vectorized")
+    encoding: str = Field("cl100k_base", title="Encoding", description="Encoding, defaults cl100k_base")
 
 
 class RestResult(BaseModel):
-    code: int = Field(0, title="返回码", description="返回码, 0为成功, 其他为失败")
-    msg: str = Field("ok", title="返回消息", description="返回消息, 成功为ok, 失败为具体错误信息")
-    result: dict = Field({}, title="返回数据(可选)", description="返回数据(可选), 文本内容或是结构化数据")
+    code: int = Field(0, title="Return code",
+                      description="The return code is 0 for success, and the other is for failure")
+    msg: str = Field("success", title="Return the message",
+                     description="A message is returned, success is success, failure is a specific error message")
+    result: dict = Field({}, title="Return data (optional)",
+                         description="Return data (optional), textual content or structured data")
 
 
 API_KEY = os.environ.get("API_KEY")
@@ -83,7 +90,7 @@ api_key_header = APIKeyHeader(name="Authorization", auto_error=False)
 
 
 def verify_api_key(api_key: str = Depends(api_key_header)):
-    """验证API Key"""
+    """Verify the API Key"""
     if api_key is None or api_key == "" or len(api_key) < 8 or api_key[7:] != API_KEY:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API Key")
     return TokenData(api_key=api_key)
@@ -96,7 +103,7 @@ async def root():
 
 @app.post("/token/stat")
 async def token_stat(item: TokenItem, td: TokenData = Depends(verify_api_key)):
-    """统计文本的token数量"""
+    """Count the number of tokens in the text"""
     try:
         return dict(code=0, msg="ok", data=dict(
             encoding=item.encoding,
@@ -108,7 +115,7 @@ async def token_stat(item: TokenItem, td: TokenData = Depends(verify_api_key)):
 
 @app.post("/knowledge/create")
 async def create_index(item: IndexItem, td: TokenData = Depends(verify_api_key)):
-    """创建知识库内容索引"""
+    """Create a knowledge base content index"""
     try:
         if item.type == "text":
             await qdrant.index_text(item.collection, item.text, item.chunk_size, item.chunk_overlap)
@@ -124,7 +131,7 @@ async def create_index(item: IndexItem, td: TokenData = Depends(verify_api_key))
 
 @app.post("/knowledge/search", summary="搜索知识库", description="搜索知识库, 获取相关内容")
 async def search_index(item: IndexSearchItem, td: TokenData = Depends(verify_api_key)):
-    """搜索知识库，返回相关内容"""
+    """Search the knowledge base to return relevant content"""
     try:
         result = await qdrant.search(item.collection, item.query)
         return RestResult(code=0, msg="ok", result=dict(data=result))
