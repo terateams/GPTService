@@ -7,7 +7,7 @@ WORKDIR /
 # 将项目文件复制到工作目录
 COPY apps /
 COPY ./main.py /main.py
-COPY ./requirements.txt /app/requirements.txt
+COPY ./requirements.txt /requirements.txt
 
 # 安装项目依赖
 RUN pip install --no-cache-dir -r requirements.txt
