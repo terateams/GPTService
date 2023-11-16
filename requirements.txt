@@ -6,7 +6,5 @@ tiktoken
 openai
 starlette
 PyMuPDF
-semantic_kernel
 langchain
-chromadb
 qdrant-client
