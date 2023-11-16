@@ -6,7 +6,6 @@ WORKDIR /
 
 # 将项目文件复制到工作目录
 COPY libs /
-COPY libs/__init__.py /apps/__init__.py
 COPY ./main.py /main.py
 COPY ./requirements.txt /requirements.txt
 
