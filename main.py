@@ -109,10 +109,8 @@ async def root():
 @app.get("/privacy")
 async def root():
     return """
-    
-Here is the English translation of the privacy statement draft for your custom GPTS API service:
-
 Privacy Statement
+
 Respecting User Privacy: Our custom GPTS API service is committed to respecting user privacy. We do not collect or store any personal information from users.
 
 Data Processing: Any data sent by users through the API is only used for processing specific requests and is immediately deleted from our systems upon completion.
