@@ -15,7 +15,6 @@ load_dotenv()
 from common import num_tokens_from_string
 from qdrant_index import qdrant
 
-
 log = logging.getLogger(__name__)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
@@ -44,7 +43,11 @@ app = FastAPI(
     title="GPTService API",
     description="gptservice api",
     version="1.0.0",
+    servers=[
+        {"url": os.environ.get("GPTS_API_SERVER"), "description": "Production server"},
+    ]
 )
+
 app.add_middleware(LimitUploadSize, max_upload_size=1024 * 1024 * 10)
 
 
@@ -68,7 +71,8 @@ class IndexItem(BaseModel):
 
 
 class IndexSearchItem(BaseModel):
-    collection: str = Field("default", title="Collection name", description="The name of the knowledge base index store")
+    collection: str = Field("default", title="Collection name",
+                            description="The name of the knowledge base index store")
     query: str = Field(title="Query content", description="Query the text content of the knowledge base index store")
 
 
@@ -121,7 +125,7 @@ async def create_index(item: IndexItem, td: TokenData = Depends(verify_api_key))
     """Create a knowledge base content index"""
     try:
         if item.type == "text":
-            await qdrant.index_texts(item.collection, item.texts,item.metadatas, item.chunk_size, item.chunk_overlap)
+            await qdrant.index_texts(item.collection, item.texts, item.metadatas, item.chunk_size, item.chunk_overlap)
         elif item.type == "webbase":
             await qdrant.index_text_from_url(item.collection, item.url, item.chunk_size, item.chunk_overlap)
         elif item.type == "webpdf":
@@ -145,5 +149,6 @@ async def search_index(item: IndexSearchItem, td: TokenData = Depends(verify_api
 
 if __name__ == "__main__":
     import uvicorn
+
     webport = int(os.environ.get("WEB_PORT", 8700))
     uvicorn.run(app, host="0.0.0.0", port=webport)
