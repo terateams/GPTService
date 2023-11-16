@@ -106,6 +106,27 @@ async def root():
     return "ok"
 
 
+@app.get("/privacy")
+async def root():
+    return """
+    
+Here is the English translation of the privacy statement draft for your custom GPTS API service:
+
+Privacy Statement
+Respecting User Privacy: Our custom GPTS API service is committed to respecting user privacy. We do not collect or store any personal information from users.
+
+Data Processing: Any data sent by users through the API is only used for processing specific requests and is immediately deleted from our systems upon completion.
+
+Transparency: We promise to maintain transparency in our processing and will not use user data for any purpose other than request processing.
+
+Security: We take all reasonable measures to ensure the security of user data and to prevent unauthorized access or disclosure.
+
+Policy Changes: Any changes to this privacy policy will be updated on our website.
+
+Contact Us: If you have any questions about our privacy policy, please contact us at [jamiesun.net@gmail.com].
+    """
+
+
 @app.post("/token/stat", summary="Count the number of tokens in the text",
           description="Count the number of tokens in the text")
 async def token_stat(item: TokenItem, td: TokenData = Depends(verify_api_key)):
