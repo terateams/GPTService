@@ -1,6 +1,4 @@
 import os
-
-import tiktoken
 from langchain.document_loaders import WebBaseLoader
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
