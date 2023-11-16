@@ -101,7 +101,8 @@ async def root():
     return "ok"
 
 
-@app.post("/token/stat")
+@app.post("/token/stat", summary="Count the number of tokens in the text",
+          description="Count the number of tokens in the text")
 async def token_stat(item: TokenItem, td: TokenData = Depends(verify_api_key)):
     """Count the number of tokens in the text"""
     try:
@@ -113,7 +114,8 @@ async def token_stat(item: TokenItem, td: TokenData = Depends(verify_api_key)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/knowledge/create")
+@app.post("/knowledge/create", summary="Create a knowledge base content index",
+          description="Create a knowledge base content index")
 async def create_index(item: IndexItem, td: TokenData = Depends(verify_api_key)):
     """Create a knowledge base content index"""
     try:
@@ -129,7 +131,8 @@ async def create_index(item: IndexItem, td: TokenData = Depends(verify_api_key))
     return RestResult(code=0, msg="success")
 
 
-@app.post("/knowledge/search", summary="搜索知识库", description="搜索知识库, 获取相关内容")
+@app.post("/knowledge/search", summary="Search the knowledge base",
+          description="Search the knowledge base for relevant content")
 async def search_index(item: IndexSearchItem, td: TokenData = Depends(verify_api_key)):
     """Search the knowledge base to return relevant content"""
     try:
