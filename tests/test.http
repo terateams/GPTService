@@ -48,6 +48,18 @@ Authorization: Bearer myapikey
 
 ###
 
+POST http://127.0.0.1:8700/knowledge/search
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer myapikey
+
+{
+  "collection": "mikrotik_library",
+  "query": "IP"
+}
+
+###
+
 POST http://127.0.0.1:8700/token/stat
 Accept: application/json
 Content-Type: application/json

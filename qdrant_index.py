@@ -27,6 +27,7 @@ class QdrantIndex(object):
         embeddings = OpenAIEmbeddings()
         q = Qdrant(
             client=client, collection_name=collection,
+            content_payload_key="text",
             embeddings=embeddings,
         )
         result = await q.asimilarity_search_with_score(text, k=topk)
@@ -67,6 +68,7 @@ class QdrantIndex(object):
             docs, embeddings,
             ids=ids,
             url=self.qdrant_url,
+            content_payload_key="text",
             prefer_grpc=self.qdrant_grpc,
             collection_name=collection,
         )
@@ -85,6 +87,7 @@ class QdrantIndex(object):
             docs, embeddings,
             ids=ids,
             url=self.qdrant_url,
+            content_payload_key="text",
             prefer_grpc=self.qdrant_grpc,
             collection_name=collection,
         )
@@ -104,6 +107,7 @@ class QdrantIndex(object):
             ids=ids,
             url=self.qdrant_url,
             prefer_grpc=self.qdrant_grpc,
+            content_payload_key="text",
             collection_name=collection,
         )
 
