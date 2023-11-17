@@ -13,7 +13,7 @@ from starlette.types import ASGIApp
 
 load_dotenv()
 
-from common import num_tokens_from_string
+from common import num_tokens_from_string, generate_api_key, validate_api_key
 from qdrant_index import qdrant
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -99,13 +99,13 @@ class RestResult(BaseModel):
                          description="Return data (optional), textual content or structured data")
 
 
-API_KEY = os.environ.get("API_KEY")
+API_SECRET = os.environ.get("API_SECRET")
 api_key_header = APIKeyHeader(name="Authorization", auto_error=False)
 
 
 def verify_api_key(api_key: str = Depends(api_key_header)):
     """Verify the API Key"""
-    if api_key is None or api_key == "" or len(api_key) < 8 or api_key[7:] != API_KEY:
+    if api_key is None or api_key == "" or len(api_key) < 8 or not validate_api_key(api_key[7:], API_SECRET):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API Key")
     return TokenData(api_key=api_key)
 
