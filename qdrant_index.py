@@ -42,8 +42,9 @@ class QdrantIndex(object):
         client = qdrant_client.QdrantClient(
             url=self.qdrant_url, prefer_grpc=self.qdrant_grpc
         )
-        client.delete_collection(collection_name=collection)
+        resp = client.delete_collection(collection_name=collection)
         client.close()
+        return resp
 
     async def list_index(self):
         """delete the knowledge base content index"""

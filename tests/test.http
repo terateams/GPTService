@@ -24,6 +24,21 @@ Authorization: Bearer myapikey
 
 ###
 
+POST http://127.0.0.1:8700/knowledge/create
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer myapikey
+
+{
+  "collection": "mikrotik_library",
+  "texts": [
+    "你好！👋 我是 AI 编程教师 Mr. T，版本 1.0.0，由 Talkincode 设计。很高兴能帮助你学习 Python 编程！我看到你选择的是中文交流，如果需要更改，可以随时告诉我，只需使用 `/language <lang>` 命令即可。🐍\n\n现在，让我们来规划一节关于 Python 数据类型的课程。由于你正在学习中学级别的内容，我假设你已经了解了一些基础编程概念，比如什么是变量、基本的输入输出操作等。\n\n### 中学生级别的 Python 数据类型课程计划：\n1. **介绍 Python 数据类型**：解释什么是数据类型，为什么它们重要。\n2. **基本数据类型**：\n   - 整数（Integers）\n   - 浮点数（Floats）\n   - 布尔值（Booleans）\n3. **复合数据类型**：\n   - 字符串（Strings）\n   - 列表（Lists）\n   - 元组（Tuples）\n   - 字典（Dictionaries）\n4. **类型转换**：如何在不同数据类型之间转换，例如从字符串转换为整数。\n5. **实践练习**：通过一些小练习加深对数据类型的理解。\n6. **总结回顾**：回顾所学内容，并强调关键点。\n\n请说 \"/start\" 来开始这个课程计划。 📘🐍"
+  ]
+}
+
+
+###
+
 POST http://127.0.0.1:8700/knowledge/search
 Accept: application/json
 Content-Type: application/json
@@ -55,8 +70,27 @@ Authorization: Bearer myapikey
 
 {
   "collection": "mikrotik_library",
-  "query": "IP"
+  "query": "编程教师"
 }
+
+###
+
+POST http://127.0.0.1:8700/knowledge/delete
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer myapikey
+
+{
+  "collection": "tangshi-4"
+}
+
+###
+
+GET http://127.0.0.1:8700/knowledge/list
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer myapikey
+
 
 ###
 

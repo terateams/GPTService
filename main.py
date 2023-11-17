@@ -16,6 +16,8 @@ load_dotenv()
 from common import num_tokens_from_string
 from qdrant_index import qdrant
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 log = logging.getLogger(__name__)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
@@ -79,7 +81,7 @@ class IndexSearchItem(BaseModel):
 
 
 class IndexDeleteItem(BaseModel):
-    collection: str = Field("", title="Collection name",
+    collection: str = Field("not_exist", title="Collection name",
                             description="The name of the knowledge base index store")
 
 
@@ -133,7 +135,6 @@ async def root():
     """
 
 
-
 @app.post("/token/stat", summary="Count the number of tokens in the text",
           description="Count the number of tokens in the text")
 async def token_stat(item: TokenItem, td: TokenData = Depends(verify_api_key)):
@@ -152,6 +153,7 @@ async def token_stat(item: TokenItem, td: TokenData = Depends(verify_api_key)):
 async def create_index(item: IndexItem, td: TokenData = Depends(verify_api_key)):
     """Create a knowledge base content index"""
     try:
+        log.info(f"create_index: {item}")
         if item.type == "text":
             await qdrant.index_texts(item.collection, item.texts, item.metadatas, item.chunk_size, item.chunk_overlap)
         elif item.type == "webbase":
@@ -169,15 +171,18 @@ async def create_index(item: IndexItem, td: TokenData = Depends(verify_api_key))
 async def search_index(item: IndexSearchItem, td: TokenData = Depends(verify_api_key)):
     """Search the knowledge base to return relevant content"""
     try:
+        log.info(f"search_index: {item}")
         result = await qdrant.search(item.collection, item.query)
         return RestResult(code=0, msg="ok", result=dict(data=result))
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/knowledge/list", summary="List the knowledge base",
-          description="List the knowledge base")
-async def search_index(td: TokenData = Depends(verify_api_key)):
+         description="List the knowledge base")
+async def list_index(td: TokenData = Depends(verify_api_key)):
     """Search the knowledge base to return relevant content"""
     try:
         result = await qdrant.list_index()
@@ -187,11 +192,11 @@ async def search_index(td: TokenData = Depends(verify_api_key)):
 
 
 @app.post("/knowledge/delete", include_in_schema=False)
-async def search_index(item: IndexDeleteItem, td: TokenData = Depends(verify_api_key)):
+async def delete_index(item: IndexDeleteItem, td: TokenData = Depends(verify_api_key)):
     """Search the knowledge base to return relevant content"""
     try:
-        qdrant.delete(item.collection)
-        return RestResult(code=0, msg="success")
+        resp = await qdrant.delete(item.collection)
+        return RestResult(code=0, msg="success", result=resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
