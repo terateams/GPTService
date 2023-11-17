@@ -20,7 +20,7 @@ services:
       - gptservice-volume:/data
     ports:
       - "8888:8700"
-    command: ["uvicorn", "--host","0.0.0.0","main:libs"]
+    command: ["uvicorn", "--host","0.0.0.0","main:app"]
     networks:
       gptservice_network:
 
