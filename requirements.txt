@@ -8,3 +8,6 @@ starlette
 PyMuPDF
 langchain
 qdrant-client
+python-multipart
+pytesseract
+pillow

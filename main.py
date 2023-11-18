@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import logging
 import os
+import shutil
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.security import APIKeyHeader
@@ -10,10 +11,15 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
+import pytesseract
+from PIL import Image, ImageFilter, ImageEnhance
+from tempfile import NamedTemporaryFile
+from fastapi import File, UploadFile
+from fastapi.responses import JSONResponse
 
 load_dotenv()
 
-from common import num_tokens_from_string, generate_api_key, validate_api_key
+from common import num_tokens_from_string, validate_api_key, preprocess_image, optimize_text_by_openai
 from qdrant_index import qdrant
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -199,6 +205,28 @@ async def delete_index(item: IndexDeleteItem, td: TokenData = Depends(verify_api
         return RestResult(code=0, msg="success", result=resp)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/knowledge/imgocr", summary="Image OCR",
+          description="Optical image content recognition")
+async def create_image_ocr(file: UploadFile = File(...), td: TokenData = Depends(verify_api_key)):
+    """Optical image content recognition"""
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="Only image uploads are permitted")
+    with NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        tmp_path = tmp.name
+    try:
+        img = Image.open(tmp_path)
+        img = preprocess_image(img)
+        custom_oem_psm_config = r'--oem 3 --psm 11'
+        text = pytesseract.image_to_string(img, lang='chi_sim+eng', config=custom_oem_psm_config)
+        text = optimize_text_by_openai(text)
+        return JSONResponse(content={"filename": file.filename, "content": text})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        os.unlink(tmp_path)
 
 
 if __name__ == "__main__":

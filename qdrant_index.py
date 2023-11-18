@@ -1,7 +1,6 @@
 import os
 from langchain.document_loaders import WebBaseLoader
 from langchain.document_loaders import TextLoader
-
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Qdrant
