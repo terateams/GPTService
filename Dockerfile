@@ -1,5 +1,18 @@
 FROM condaforge/mambaforge:latest
 
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN echo "Asia/Shanghai" > /etc/timezone && \
+    ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    apt-get update && \
+    apt-get install -y tzdata && \
+    dpkg-reconfigure --frontend noninteractive tzdata
+
+RUN apt-get update && \
+    apt-get install -y tesseract-ocr tesseract-ocr-chi-sim && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Set up a working directory
 WORKDIR /
 
@@ -9,12 +22,11 @@ COPY ./common.py /common.py
 COPY ./qdrant_index.py /qdrant_index.py
 COPY ./requirements.txt /requirements.txt
 
+
+
 # Install project dependencies
-RUN pip install --no-cache-dir -r requirements.txt && \
-    apt-get update && \
-    apt-get install -y tesseract-ocr tesseract-ocr-chi-sim && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir -r requirements.txt
+
 
 # Expose the port
 EXPOSE 8700
