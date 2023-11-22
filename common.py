@@ -92,18 +92,18 @@ def build_mind_map(graph, node, parent, structure, level=0, parent_color=None):
     # 根据层级设置样式
     if level == 0:  # 根节点
         node_color = generate_random_dark_color()
-        graph.node(node, style='filled', color=node_color, fontsize="21", fontname='SimHei', fontcolor='white',
+        graph.node(node, style='filled', color=node_color, fontsize="21", fontname='WenQuanYi Micro Hei', fontcolor='white',
                    shape='tripleoctagon',peripheries="2", label=node)
     elif level == 1:  # 第二层节点
         node_color = generate_random_dark_color()
-        graph.node(node, style='filled', color=node_color, fontsize="18", fontname='SimHei', fontcolor='white',
+        graph.node(node, style='filled', color=node_color, fontsize="18", fontname='WenQuanYi Micro Hei', fontcolor='white',
                    shape='hexagon',peripheries="2", label=node)
     elif level == 2:  # 第三层节点
         node_color = generate_light_color(parent_color)
-        graph.node(node, style='filled', color=node_color, fontsize="16", shape='note', fontname='SimHei', label=node)
+        graph.node(node, style='filled', color=node_color, fontsize="16", shape='note', fontname='WenQuanYi Micro Hei', label=node)
     else:  # 其他层级
         node_color = generate_light_color(parent_color)
-        graph.node(node, style='solid', color=node_color,fontsize="14", shape='egg', fontname='SimHei', label=node)
+        graph.node(node, style='solid', color=node_color,fontsize="14", shape='egg', fontname='WenQuanYi Micro Hei', label=node)
 
     # 连接节点
     if parent:
