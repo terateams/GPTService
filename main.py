@@ -91,10 +91,15 @@ class IndexItem(BaseModel):
 
 
 class MindmapItem(BaseModel):
-    title: str = Field("Mindmap", title="Mindmap Title", description="Mindmap Title")
-    structure: Dict[str, List[str]] = Field({}, title="Mindmap Structure data",
-                                            description="Mindmap Structure data")
-
+    title: str = Field(default="Mindmap", title="Mindmap Title", description="Mindmap Title",
+                       example="Python 学习")
+    structure: Dict[str, List[str]] = Field(default={}, title="Mindmap Structure data",
+                                            description="Mindmap Structure data",
+                                            example={
+                                                "Python 学习": ["基础知识", "高级主题"],
+                                                "基础知识": ["变量", "数据类型", "控制流"],
+                                                "高级主题": ["面向对象", "装饰器", "迭代器"]
+                                            })
 
 class IndexSearchItem(BaseModel):
     collection: str = Field("default", title="Collection name",
@@ -266,14 +271,15 @@ async def create_mindmap(item: MindmapItem, td: bool = Depends(verify_api_key)):
     try:
         log.info(f"create_mindmap: {item}")
         # 创建并构建思维导图
-        graph = Digraph(comment=item.title)
+        graph = Digraph(comment=item.title, engine="sfdp")
+        graph.attr(splines='curved')
         build_mind_map(graph, item.title, None, structure=item.structure)
         fileuuid = str(uuid.uuid4())
-        graph.render(os.path.join(DATA_DIR, fileuuid), format='pdf', cleanup=True)
+        graph.render(os.path.join(DATA_DIR, fileuuid), format='png', cleanup=True)
         server_url = os.environ.get("GPTS_API_SERVER")
         if server_url.endswith("/"):
             server_url = server_url[:-1]
-        return RestResult(code=0, msg="success", result=dict(data=f"{server_url}/assets/{fileuuid}.pdf"))
+        return RestResult(code=0, msg="success", result=dict(data=f"{server_url}/assets/{fileuuid}.png"))
     except Exception as e:
         log.error(f"create_mindmap error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
