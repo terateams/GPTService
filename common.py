@@ -66,3 +66,10 @@ def optimize_text_by_openai(content):
     )
     return response.choices[0].message.content
 
+
+def build_mind_map(graph, node, parent, structure, color='black'):
+    if parent:
+        graph.edge(parent, node, color=color)
+    for child in structure.get(node, []):
+        graph.node(child)
+        build_mind_map(graph, child, node, structure, color=color)

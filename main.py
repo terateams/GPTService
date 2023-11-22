@@ -1,8 +1,13 @@
+import re
+import uuid
+from typing import Dict, List
+
 from dotenv import load_dotenv
 import logging
 import os
 import shutil
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.responses import HTMLResponse
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
@@ -16,10 +21,15 @@ from PIL import Image, ImageFilter, ImageEnhance
 from tempfile import NamedTemporaryFile
 from fastapi import File, UploadFile
 from fastapi.responses import JSONResponse
+from graphviz import Digraph
 
 load_dotenv()
 
-from common import num_tokens_from_string, validate_api_key, preprocess_image, optimize_text_by_openai
+from common import (num_tokens_from_string,
+                    validate_api_key,
+                    preprocess_image,
+                    build_mind_map,
+                    optimize_text_by_openai)
 from qdrant_index import qdrant
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -80,6 +90,12 @@ class IndexItem(BaseModel):
                                description="Split overlap, the size of the overlap of each segment when processing text")
 
 
+class MindmapItem(BaseModel):
+    title: str = Field("Mindmap", title="Mindmap Title", description="Mindmap Title")
+    structure: Dict[str, List[str]] = Field({}, title="Mindmap Structure data",
+                                            description="Mindmap Structure data")
+
+
 class IndexSearchItem(BaseModel):
     collection: str = Field("default", title="Collection name",
                             description="The name of the knowledge base index store")
@@ -120,6 +136,21 @@ def verify_api_key(api_key: str = Depends(api_key_header)):
 async def root():
     return "ok"
 
+
+@app.get("/assets/{filename}",include_in_schema=False)
+async def download_file(filename: str):
+    if not re.match(r'^[\w,\s-]+\.[A-Za-z]{3}$', filename):
+        raise HTTPException(status_code=400, detail="Invalid file name")
+
+    # 构建文件完整路径
+    file_path = os.path.join(DATA_DIR, filename)
+
+    # 检查文件是否存在
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # 返回文件响应
+    return FileResponse(file_path)
 
 @app.get("/privacy", response_class=HTMLResponse)
 async def root():
@@ -227,6 +258,25 @@ async def create_image_ocr(file: UploadFile = File(...), td: TokenData = Depends
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         os.unlink(tmp_path)
+
+
+@app.post("/knowledge/mindmap/create", summary="Create a knowledge base mindmap from params",
+          description="Generating mind maps from given structured data")
+async def create_mindmap(item: MindmapItem, td: bool = Depends(verify_api_key)):
+    try:
+        log.info(f"create_mindmap: {item}")
+        # 创建并构建思维导图
+        graph = Digraph(comment=item.title)
+        build_mind_map(graph, item.title, None, structure=item.structure)
+        fileuuid = str(uuid.uuid4())
+        graph.render(os.path.join(DATA_DIR, fileuuid), format='pdf', cleanup=True)
+        server_url = os.environ.get("GPTS_API_SERVER")
+        if server_url.endswith("/"):
+            server_url = server_url[:-1]
+        return RestResult(code=0, msg="success", result=dict(data=f"{server_url}/assets/{fileuuid}.pdf"))
+    except Exception as e:
+        log.error(f"create_mindmap error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

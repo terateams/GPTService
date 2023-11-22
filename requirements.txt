@@ -11,3 +11,4 @@ qdrant-client
 python-multipart
 pytesseract
 pillow
+graphviz
