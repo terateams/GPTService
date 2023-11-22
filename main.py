@@ -76,8 +76,8 @@ class TokenData(BaseModel):
 
 
 class IndexItem(BaseModel):
-    collection: str = Field("default", title="Collection name", description="Collection name")
-    texts: list = Field([], title="Textual content list", description="The stored text content list to be vectorized")
+    collection: str = Field(..., title="Collection name", description="Collection name")
+    texts: list = Field(..., title="Textual content list", description="The stored text content list to be vectorized")
     metadatas: list = Field([], title="Metadata list", description="Metadata list, structured data")
     type: str = Field("text", title="The type of text",
                       description="Text type, text: text,webbase: web page, webpdf: web page pdf")
@@ -91,9 +91,10 @@ class IndexItem(BaseModel):
 
 
 class MindmapItem(BaseModel):
-    title: str = Field(default="Mindmap", title="Mindmap Title as root node", description="Mindmap Title, Root node",
+    title: str = Field(..., title="Mindmap Title as root node,required", description="Mindmap Title, Root node",
                        example="Python 学习")
-    structure: Dict[str, List[str]] = Field(default={}, title="Mindmap Structure data",
+    structure: Dict[str, List[str]] = Field(...,
+                                            title="Mindmap Structure data, required",
                                             description="Mindmap Structure data, "
                                                         "The title value must be included in the structure's keys",
                                             example={
@@ -102,14 +103,16 @@ class MindmapItem(BaseModel):
                                                 "高级主题": ["面向对象", "装饰器", "迭代器"]
                                             })
 
+
 class IndexSearchItem(BaseModel):
-    collection: str = Field("default", title="Collection name",
+    collection: str = Field(..., title="Collection name",
                             description="The name of the knowledge base index store")
-    query: str = Field(title="Query content", description="Query the text content of the knowledge base index store")
+    query: str = Field(..., title="Query content", description="Query the text content of the knowledge base"
+                                                               " index store")
 
 
 class IndexDeleteItem(BaseModel):
-    collection: str = Field("not_exist", title="Collection name",
+    collection: str = Field(..., title="Collection name, required",
                             description="The name of the knowledge base index store")
 
 
@@ -143,7 +146,7 @@ async def root():
     return "ok"
 
 
-@app.get("/assets/{filename}",include_in_schema=False)
+@app.get("/assets/{filename}", include_in_schema=False)
 async def download_file(filename: str):
     if not re.match(r'^[\w,\s-]+\.[A-Za-z]{3}$', filename):
         raise HTTPException(status_code=400, detail="Invalid file name")
