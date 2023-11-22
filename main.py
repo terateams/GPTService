@@ -91,10 +91,11 @@ class IndexItem(BaseModel):
 
 
 class MindmapItem(BaseModel):
-    title: str = Field(default="Mindmap", title="Mindmap Title", description="Mindmap Title",
+    title: str = Field(default="Mindmap", title="Mindmap Title as root node", description="Mindmap Title, Root node",
                        example="Python 学习")
     structure: Dict[str, List[str]] = Field(default={}, title="Mindmap Structure data",
-                                            description="Mindmap Structure data",
+                                            description="Mindmap Structure data, "
+                                                        "The title value must be included in the structure's keys",
                                             example={
                                                 "Python 学习": ["基础知识", "高级主题"],
                                                 "基础知识": ["变量", "数据类型", "控制流"],
