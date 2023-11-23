@@ -25,6 +25,7 @@ from fastapi.responses import JSONResponse
 from graphviz import Digraph
 from concurrent.futures import ProcessPoolExecutor
 from fastapi import FastAPI, BackgroundTasks
+from fastapi.templating import Jinja2Templates
 import asyncio
 
 load_dotenv()
@@ -77,6 +78,7 @@ app.add_middleware(LimitUploadSize, max_upload_size=1024 * 1024 * 10)
 
 executor = ProcessPoolExecutor()
 
+templates = Jinja2Templates(directory="templates")
 
 async def run_in_process(fn, *args):
     loop = asyncio.get_running_loop()
@@ -322,14 +324,8 @@ def create_mindmap_task(task):
         dot_path = output_path + ".dot"
         with open(dot_path, "w") as dot_file:
             dot_file.write(graph.source)
-
-        server_url = os.environ.get("GPTS_API_SERVER")
-        if server_url.endswith("/"):
-            server_url = server_url[:-1]
         task["status"] = "done"
         task["remark"] = "The task is completed, please access the URL information!"
-        task["image_url"] = f"{server_url}/assets/{fileuuid}.png"
-        task["dot_url"] = f"{server_url}/assets/{fileuuid}.dot"
         with open(os.path.join(DATA_DIR, f"{fileuuid}.json"), "w") as f:
             data = json.dumps(task)
             f.write(data)
@@ -380,10 +376,10 @@ async def generate_mindmap_task_add(background_tasks: BackgroundTasks, content: 
             status="pending",
             image_url=f"{server_url}/assets/{taskid}.png",
             dot_url=f"{server_url}/assets/{taskid}.dot",
-            status_url=f"{server_url}/knowledge/mindmap/task/result/{taskid}",
-            remark="While the task is being processed, remember to save the URL information and access"
-                   " it later! You can show the user the image and dot file as well as a link to the task"
-                   " result URL for later delayed access.",
+            viz_url=f"{server_url}/knowledge/mindmap/task/viz/{taskid}",
+            status_url=f"{server_url}/knowledge/mindmap/task/result/view/{taskid}",
+            remark="When working on a task, remember to save the URL information for later access! "
+                   "You can display a link to the task status results to the user for later delayed access.",
         )
         with open(os.path.join(DATA_DIR, f"{taskid}.json"), "w") as f:
             data = json.dumps(task)
@@ -405,7 +401,42 @@ async def generate_mindmap_task_result(taskid: str):
     file_path = os.path.join(DATA_DIR, f"{taskid}.json")
     if not os.path.isfile(file_path):
         raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(file_path)
+
+    with open(file_path, "r") as f:
+        data = json.load(f)
+        return RestResult(code=0, msg="success", result=dict(data=data))
+
+
+@app.get("/knowledge/mindmap/task/result/view/{taskid}", summary="Get the mindmap generate task result",
+         description="Get the mindmap generate task result")
+async def mindmap_task_result_view(request: Request, taskid: str):
+    if not re.match(r'^[\w-]+$', taskid):
+        raise HTTPException(status_code=400, detail="Invalid task ID format")
+
+    file_path = os.path.join(DATA_DIR, f"{taskid}.json")
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    with open(file_path, "r") as f:
+        data = json.load(f)
+    return templates.TemplateResponse("gen_mindmap_result.html", {"request": request, "data": data})
+
+
+@app.get("/knowledge/mindmap/task/viz/{taskid}", summary="Get the mindmap generate task result",
+         description="Get the mindmap generate task result")
+async def mindmap_vizview(request: Request, taskid: str):
+    if not re.match(r'^[\w-]+$', taskid):
+        raise HTTPException(status_code=400, detail="Invalid task ID format")
+
+    file_path = os.path.join(DATA_DIR, f"{taskid}.dot")
+    if not os.path.isfile(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    with open(file_path, "r") as f:
+        dot_data = {
+            "dot_string": f.read()
+        }
+    return templates.TemplateResponse("graphviz_dot_view.html", {"request": request, "data": dot_data})
 
 
 if __name__ == "__main__":

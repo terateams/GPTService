@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphviz with Viz.js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/viz.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/full.render.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            padding: 20px;
+            color: #333;
+        }
+
+        #engine-select-box {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4a69bd;
+        }
+
+        #graph {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            overflow: auto;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Graphviz Visualization with Viz.js</h1>
+
+    <div id="engine-select-box">
+        <label for="engine-select">Layout Engine:</label>
+        <select name="engine-select" id="engine-select">
+            <option value="dot">dot</option>
+            <option value="circo">circo</option>
+            <option value="fdp">fdp</option>
+            <option value="neato">neato</option>
+            <option value="osage">osage</option>
+            <option value="nop">nop</option>
+            <option value="nop1">nop1</option>
+            <option value="nop2">nop2</option>
+            <option value="twopi">twopi</option>
+            <option value="patchwork">patchwork</option>
+        </select>
+    </div>
+
+    <div id="graph"></div>
+
+    <script>
+        var dotString = `{{ data.dot_string | safe }}`;
+
+        // 函数：根据选定的引擎渲染图形
+        function renderGraph(engine) {
+            var viz = new Viz();
+            viz.renderSVGElement(dotString, {format: "svg", engine: engine})
+                .then(function(element) {
+                    var graphDiv = document.getElementById("graph");
+                    graphDiv.innerHTML = ''; // 清空旧图形
+                    graphDiv.appendChild(element);
+                })
+                .catch(error => {
+                    console.error(error);
+                    document.getElementById("graph").innerHTML = "Error rendering graph";
+                });
+        }
+
+        // 初始渲染
+        renderGraph("fdp");
+
+        // 事件监听器：当选择不同的布局引擎时重新渲染图形
+        document.getElementById("engine-select").addEventListener("change", function() {
+            var selectedEngine = this.value;
+            renderGraph(selectedEngine);
+        });
+    </script>
+</body>
+</html>
