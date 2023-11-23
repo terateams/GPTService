@@ -284,26 +284,6 @@ async def create_image_ocr(file: UploadFile = File(...), td: TokenData = Depends
         os.unlink(tmp_path)
 
 
-# @app.post("/knowledge/mindmap/create", summary="Create a knowledge base mindmap from params",
-#           description="Generating mind maps from given structured data", include_in_schema=False)
-# async def create_mindmap(item: MindmapItem, td: bool = Depends(verify_api_key)):
-#     try:
-#         log.info(f"create_mindmap: {item}")
-#         # 创建并构建思维导图
-#         graph = Digraph(comment=item.title, engine="sfdp")
-#         graph.attr(splines='curved', overlap='false', margin='0.4')  # 设置图的大小为A4纸尺寸
-#         build_mind_map(graph, item.title, None, structure=item.structure)
-#         fileuuid = str(uuid.uuid4())
-#         graph.render(os.path.join(DATA_DIR, fileuuid), format='png', cleanup=True)
-#         server_url = os.environ.get("GPTS_API_SERVER")
-#         if server_url.endswith("/"):
-#             server_url = server_url[:-1]
-#         return RestResult(code=0, msg="success", result=dict(data=f"{server_url}/assets/{fileuuid}.png"))
-#     except Exception as e:
-#         log.error(f"create_mindmap error: {e}")
-#         raise HTTPException(status_code=500, detail=str(e))
-
-
 def create_mindmap_task(task):
     try:
         log.info(f"generate_mindmap params: {task['content']}")
@@ -315,7 +295,7 @@ def create_mindmap_task(task):
         # 使用 model_validate 方法创建 MindmapItem 实例
         item = MindmapItem.model_validate(data)
         graph = Digraph(comment=item.title, engine="sfdp")
-        graph.attr(splines='curved')
+        graph.attr(splines='compound')
         build_mind_map(graph, item.title, None, structure=item.structure)
         fileuuid = task["id"]
         output_path = os.path.join(DATA_DIR, fileuuid)
@@ -332,32 +312,6 @@ def create_mindmap_task(task):
     except Exception as e:
         import traceback
         traceback.print_exc()
-
-
-# @app.get("/knowledge/mindmap/generate", summary="Create a knowledge base mindmap from query content",
-#          description="Generating mind maps from given content")
-# async def generate_mindmap(content: str = Query(...), td: bool = Depends(verify_api_key)):
-#     try:
-#         log.info(f"generate_mindmap params: {content}")
-#         airesp = await create_mindma_data_by_openai(content)
-#         log.info(f"generate_mindmap result: {airesp}")
-#         # 创建并构建思维导图
-#         # 将 JSON 字符串转换为 Python 字典
-#         data = json.loads(airesp)
-#         # 使用 model_validate 方法创建 MindmapItem 实例
-#         item = MindmapItem.model_validate(data)
-#         graph = Digraph(comment=item.title, engine="sfdp")
-#         graph.attr(splines='curved')
-#         build_mind_map(graph, item.title, None, structure=item.structure)
-#         fileuuid = str(uuid.uuid4())
-#         graph.render(os.path.join(DATA_DIR, fileuuid), format='png', cleanup=True)
-#         server_url = os.environ.get("GPTS_API_SERVER")
-#         if server_url.endswith("/"):
-#             server_url = server_url[:-1]
-#         return RestResult(code=0, msg="success", result=dict(data=f"{server_url}/assets/{fileuuid}.png"))
-#     except Exception as e:
-#         log.error(f"generate_mindmap error: {e}")
-#         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/knowledge/mindmap/task/add", summary="Create a mindmap generate task from content",
@@ -407,8 +361,7 @@ async def generate_mindmap_task_result(taskid: str):
         return RestResult(code=0, msg="success", result=dict(data=data))
 
 
-@app.get("/knowledge/mindmap/task/result/view/{taskid}", summary="Get the mindmap generate task result",
-         description="Get the mindmap generate task result")
+@app.get("/knowledge/mindmap/task/result/view/{taskid}", include_in_schema=False)
 async def mindmap_task_result_view(request: Request, taskid: str):
     if not re.match(r'^[\w-]+$', taskid):
         raise HTTPException(status_code=400, detail="Invalid task ID format")
@@ -422,8 +375,7 @@ async def mindmap_task_result_view(request: Request, taskid: str):
     return templates.TemplateResponse("gen_mindmap_result.html", {"request": request, "data": data})
 
 
-@app.get("/knowledge/mindmap/task/viz/{taskid}", summary="Get the mindmap generate task result",
-         description="Get the mindmap generate task result")
+@app.get("/knowledge/mindmap/task/viz/{taskid}", include_in_schema=False)
 async def mindmap_vizview(request: Request, taskid: str):
     if not re.match(r'^[\w-]+$', taskid):
         raise HTTPException(status_code=400, detail="Invalid task ID format")

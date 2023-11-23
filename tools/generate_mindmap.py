@@ -6,11 +6,10 @@ from common import create_mindma_data_by_openai, build_mind_map
 from main import MindmapItem
 
 
-def generate_mindmap():
+def generate_mindmap(content: str):
     try:
-        airesp = create_mindma_data_by_openai("根据微积分基础整理一个学习计划思维导图")
         # 创建并构建思维导图
-        data = json.loads(airesp)
+        data = json.loads(content)
         item = MindmapItem.model_validate(data)
 
         graph = Digraph(comment=item.title, engine="Sfdp")
@@ -58,4 +57,4 @@ if __name__ == '__main__':
         "📊 数据分析": []
     }
 }"""
-    generate_mindmap()
+    generate_mindmap(content)

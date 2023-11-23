@@ -136,24 +136,24 @@ def build_mind_map(graph, node, parent, structure, level=0, parent_color=None):
         node_color = generate_random_dark_color()
         graph.node(node, style='filled', color=node_color, fontsize="21", fontname='Noto Sans',
                    fontcolor='white',
-                   shape='tripleoctagon', peripheries="2", label=node)
+                   shape='ellipse', peripheries="2", label=node)
     elif level == 1:  # 第二层节点
         node_color = generate_random_dark_color()
         graph.node(node, style='filled', color=node_color, fontsize="18", fontname='Noto Sans',
                    fontcolor='white',
-                   shape='hexagon', peripheries="2", label=node)
+                   shape='egg', peripheries="2", label=node)
     elif level == 2:  # 第三层节点
         node_color = generate_light_color(parent_color)
-        graph.node(node, style='filled', color=node_color, fontsize="16", shape='note', fontname='Noto Sans',
+        graph.node(node, style='filled', color=node_color, fontsize="16", shape='Mrecord', fontname='Noto Sans',
                    label=node)
     else:  # 其他层级
         node_color = generate_light_color(parent_color)
-        graph.node(node, style='filled', color=node_color, fontsize="14", shape='egg', fontname='Noto Sans',
+        graph.node(node, style='filled', color=node_color, fontsize="14", shape='Mrecord', fontname='Noto Sans',
                    label=node)
 
     # 连接节点
     if parent:
-        graph.edge(parent, node, penwidth='2.0', color=parent_color if level == 1 else node_color)
+        graph.edge(parent, node, penwidth='3.0',arrowhead="diamond", color=node_color)
 
     # 递归构建子节点
     for child in structure.get(node, []):
