@@ -8,19 +8,15 @@ RUN echo "Asia/Shanghai" > /etc/timezone && \
     apt-get install -y tzdata && \
     dpkg-reconfigure --frontend noninteractive tzdata
 
-RUN apt-get update && \
-    apt-get install -y tesseract-ocr tesseract-ocr-chi-sim && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
 
-# 安装 Graphviz
+# 安装 Tesseract-OCR、Graphviz 和字体
 RUN apt-get update && \
-    apt-get install -y graphviz && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# 安装中文字体
-RUN apt-get update && apt-get install -y fonts-wqy-microhei && \
+    apt-get install -y \
+    tesseract-ocr \
+    tesseract-ocr-chi-sim \
+    graphviz \
+    fonts-wqy-microhei \
+    fonts-noto && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

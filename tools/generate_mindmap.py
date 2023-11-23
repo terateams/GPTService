@@ -6,9 +6,9 @@ from common import create_mindma_data_by_openai, build_mind_map
 from main import MindmapItem
 
 
-async def generate_mindmap():
+def generate_mindmap():
     try:
-        airesp = await create_mindma_data_by_openai("根据微积分基础整理一个学习计划思维导图")
+        airesp = create_mindma_data_by_openai("根据微积分基础整理一个学习计划思维导图")
         # 创建并构建思维导图
         data = json.loads(airesp)
         item = MindmapItem.model_validate(data)
