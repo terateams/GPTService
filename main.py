@@ -381,7 +381,8 @@ async def generate_mindmap_task_add(background_tasks: BackgroundTasks, content: 
             image_url=f"{server_url}/assets/{taskid}.png",
             dot_url=f"{server_url}/assets/{taskid}.dot",
             status_url=f"{server_url}/knowledge/mindmap/task/result/{taskid}",
-            remark="The task is being processed, please remember to save the URL information and revisit it later!",
+            remark="The task is being processed, so please remember to save the URL information and visit again later!"
+                   " You can show the URL link to the user for delayed access later.",
         )
         with open(os.path.join(DATA_DIR, f"{taskid}.json"), "w") as f:
             data = json.dumps(task)
