@@ -1,3 +1,4 @@
+import json
 import re
 import uuid
 from typing import Dict, List
@@ -6,7 +7,7 @@ from dotenv import load_dotenv
 import logging
 import os
 import shutil
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.responses import HTMLResponse
 from fastapi.security import APIKeyHeader
@@ -29,6 +30,7 @@ from common import (num_tokens_from_string,
                     validate_api_key,
                     preprocess_image,
                     build_mind_map,
+                    create_mindma_data_by_openai,
                     optimize_text_by_openai)
 from qdrant_index import qdrant
 
@@ -161,6 +163,7 @@ async def download_file(filename: str):
     # 返回文件响应
     return FileResponse(file_path)
 
+
 @app.get("/privacy", response_class=HTMLResponse)
 async def root():
     return """
@@ -270,11 +273,37 @@ async def create_image_ocr(file: UploadFile = File(...), td: TokenData = Depends
 
 
 @app.post("/knowledge/mindmap/create", summary="Create a knowledge base mindmap from params",
-          description="Generating mind maps from given structured data")
+          description="Generating mind maps from given structured data", include_in_schema=False)
 async def create_mindmap(item: MindmapItem, td: bool = Depends(verify_api_key)):
     try:
         log.info(f"create_mindmap: {item}")
         # 创建并构建思维导图
+        graph = Digraph(comment=item.title, engine="sfdp")
+        graph.attr(splines='curved', overlap='false',  margin='0.4')  # 设置图的大小为A4纸尺寸
+        build_mind_map(graph, item.title, None, structure=item.structure)
+        fileuuid = str(uuid.uuid4())
+        graph.render(os.path.join(DATA_DIR, fileuuid), format='png', cleanup=True)
+        server_url = os.environ.get("GPTS_API_SERVER")
+        if server_url.endswith("/"):
+            server_url = server_url[:-1]
+        return RestResult(code=0, msg="success", result=dict(data=f"{server_url}/assets/{fileuuid}.png"))
+    except Exception as e:
+        log.error(f"create_mindmap error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/knowledge/mindmap/generate", summary="Create a knowledge base mindmap from query content",
+         description="Generating mind maps from given content")
+async def generate_mindmap(content: str = Query(...), td: bool = Depends(verify_api_key)):
+    try:
+        log.info(f"generate_mindmap params: {content}")
+        airesp = create_mindma_data_by_openai(content)
+        log.info(f"generate_mindmap result: {airesp}")
+        # 创建并构建思维导图
+        # 将 JSON 字符串转换为 Python 字典
+        data = json.loads(airesp)
+        # 使用 model_validate 方法创建 MindmapItem 实例
+        item = MindmapItem.model_validate(data)
         graph = Digraph(comment=item.title, engine="sfdp")
         graph.attr(splines='curved')
         build_mind_map(graph, item.title, None, structure=item.structure)
@@ -285,7 +314,7 @@ async def create_mindmap(item: MindmapItem, td: bool = Depends(verify_api_key)):
             server_url = server_url[:-1]
         return RestResult(code=0, msg="success", result=dict(data=f"{server_url}/assets/{fileuuid}.png"))
     except Exception as e:
-        log.error(f"create_mindmap error: {e}")
+        log.error(f"generate_mindmap error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

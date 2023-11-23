@@ -67,12 +67,52 @@ def optimize_text_by_openai(content):
     return response.choices[0].message.content
 
 
+def create_mindma_data_by_openai(content):
+    """通过LLM 修正优化文本"""
+    sysmsg = """
+You are a mind mapping expert who analyzes user input, organizes the responses into a mind map structure, and replies in json format.
+
+- You need to analyze the user's question and break it down into sub-questions.
+- You need to organize the answers to the questions into a mind map structure with no more than 4 levels of nodes.
+- The first three levels of the mind map should be accompanied by an emoji that matches the semantics of the node, make sure the emoji are encoded in UTF-8 format.
+- The language of the mind map's nodes is determined by the user's input, e.g. Chinese if the user inputs Chinese, English if the user inputs English, or whichever language is explicitly requested by the user.- You need to reply to the user with the structure of the mind map in json format.
+- The total number of nodes to be generated should not exceed 60, so please strictly enforce this rule.
+
+The json format template:
+
+{
+    "title": "root node",
+    "structure": {
+        "root node": ["node1", "node2"],
+        "node1": ["node1-1", "node1-2"],
+        "node2": ["node2-1", "node2-2"],
+    }
+}
+
+    """
+    from openai import OpenAI
+    client = OpenAI()
+    response = client.chat.completions.create(
+        model="gpt-4-1106-preview",
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": sysmsg},
+            {"role": "user", "content": content},
+        ]
+    )
+    return response.choices[0].message.content
+
+
 def generate_light_color(pcolor: str):
-    """生成比给定颜色浅一半的颜色"""
+    """生成比给定颜色更浅的颜色"""
     r, g, b = int(pcolor[1:3], 16), int(pcolor[3:5], 16), int(pcolor[5:7], 16)
-    r = int(r + (255 - r) / 2)
-    g = int(g + (255 - g) / 2)
-    b = int(b + (255 - b) / 2)
+
+    # 增加每个颜色分量，使之更接近255
+    # 比如，可以使用原始值与255之间的75%点而不是50%
+    r = int(r + 0.65 * (255 - r))
+    g = int(g + 0.65 * (255 - g))
+    b = int(b + 0.65 * (255 - b))
+
     return '#%02x%02x%02x' % (r, g, b)
 
 
@@ -92,22 +132,26 @@ def build_mind_map(graph, node, parent, structure, level=0, parent_color=None):
     # 根据层级设置样式
     if level == 0:  # 根节点
         node_color = generate_random_dark_color()
-        graph.node(node, style='filled', color=node_color, fontsize="21", fontname='WenQuanYi Micro Hei', fontcolor='white',
-                   shape='tripleoctagon',peripheries="2", label=node)
+        graph.node(node, style='filled', color=node_color, fontsize="21", fontname='WenQuanYi Micro Hei',
+                   fontcolor='white',
+                   shape='tripleoctagon', peripheries="2", label=node)
     elif level == 1:  # 第二层节点
         node_color = generate_random_dark_color()
-        graph.node(node, style='filled', color=node_color, fontsize="18", fontname='WenQuanYi Micro Hei', fontcolor='white',
-                   shape='hexagon',peripheries="2", label=node)
+        graph.node(node, style='filled', color=node_color, fontsize="18", fontname='WenQuanYi Micro Hei',
+                   fontcolor='white',
+                   shape='hexagon', peripheries="2", label=node)
     elif level == 2:  # 第三层节点
         node_color = generate_light_color(parent_color)
-        graph.node(node, style='filled', color=node_color, fontsize="16", shape='note', fontname='WenQuanYi Micro Hei', label=node)
+        graph.node(node, style='filled', color=node_color, fontsize="16", shape='note', fontname='WenQuanYi Micro Hei',
+                   label=node)
     else:  # 其他层级
         node_color = generate_light_color(parent_color)
-        graph.node(node, style='solid', color=node_color,fontsize="14", shape='egg', fontname='WenQuanYi Micro Hei', label=node)
+        graph.node(node, style='solid', color=node_color, fontsize="14", shape='egg', fontname='WenQuanYi Micro Hei',
+                   label=node)
 
     # 连接节点
     if parent:
-        graph.edge(parent, node,  penwidth='2.0', color=parent_color if level == 1 else node_color)
+        graph.edge(parent, node, penwidth='2.0', color=parent_color if level == 1 else node_color)
 
     # 递归构建子节点
     for child in structure.get(node, []):
