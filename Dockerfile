@@ -27,6 +27,7 @@ WORKDIR /
 COPY ./main.py /main.py
 COPY ./common.py /common.py
 COPY ./qdrant_index.py /qdrant_index.py
+COPY ./templates /templates
 COPY ./requirements.txt /requirements.txt
 
 
