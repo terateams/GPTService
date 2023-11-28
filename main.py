@@ -1,7 +1,7 @@
 import json
 import re
 import uuid
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from dotenv import load_dotenv
 import logging
@@ -227,9 +227,9 @@ async def create_index(item: IndexItem, td: TokenData = Depends(verify_api_key))
     return RestResult(code=0, msg="success")
 
 
-@app.post("/knowledge/search", summary="Search the knowledge base",
-          description="Search the knowledge base for relevant content")
-async def search_index(item: IndexSearchItem, td: TokenData = Depends(verify_api_key)):
+@app.api_route("/knowledge/search", methods=["GET", "POST"], summary="Search the knowledge base",
+               description="Search the knowledge base for relevant content")
+async def search_index(item:  Optional[IndexSearchItem] = None, td: TokenData = Depends(verify_api_key)):
     """Search the knowledge base to return relevant content"""
     try:
         log.info(f"search_index: {item}")
