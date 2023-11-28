@@ -227,9 +227,24 @@ async def create_index(item: IndexItem, td: TokenData = Depends(verify_api_key))
     return RestResult(code=0, msg="success")
 
 
-@app.api_route("/knowledge/search", methods=["GET", "POST"], summary="Search the knowledge base",
-               description="Search the knowledge base for relevant content")
-async def search_index(item:  Optional[IndexSearchItem] = None, td: TokenData = Depends(verify_api_key)):
+@app.get("/knowledge/query", summary="query the knowledge base",
+         description="query the knowledge base for relevant content")
+async def search_index(collection: Optional[str] = None, query: Optional[str] = None,
+                       td: TokenData = Depends(verify_api_key)):
+    """Search the knowledge base to return relevant content"""
+    try:
+        log.info(f"search_index: {collection}")
+        result = await qdrant.search(collection, query)
+        return RestResult(code=0, msg="ok", result=dict(data=result))
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/knowledge/search", summary="Search the knowledge base",
+          description="Search the knowledge base for relevant content")
+async def search_index(item: IndexSearchItem, td: TokenData = Depends(verify_api_key)):
     """Search the knowledge base to return relevant content"""
     try:
         log.info(f"search_index: {item}")
