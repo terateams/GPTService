@@ -229,11 +229,14 @@ async def create_index(item: IndexItem, td: TokenData = Depends(verify_api_key))
 
 @app.get("/knowledge/query", summary="query the knowledge base",
          description="query the knowledge base for relevant content")
-async def search_index(collection: Optional[str] = None, query: Optional[str] = None,
-                       td: TokenData = Depends(verify_api_key)):
+async def search_index(
+    collection: str = Query(..., description="The name of the collection to query"),
+    query: str = Query(..., description="The query string to search for in the collection"),
+    td: TokenData = Depends(verify_api_key)
+):
     """Search the knowledge base to return relevant content"""
     try:
-        log.info(f"search_index: {collection}")
+        log.info(f"search_index: collection={collection}, query={query}")
         result = await qdrant.search(collection, query)
         return RestResult(code=0, msg="ok", result=dict(data=result))
     except Exception as e:
