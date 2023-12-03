@@ -8,5 +8,10 @@ arm64:
 	talkincode/gptservice:latest-arm64 .
 	docker push talkincode/gptservice:latest-arm64
 
+pubstudio:
+	docker buildx build -f Dockerfile.gptstudio  --build-arg GoArch="amd64" --platform=linux/amd64 -t \
+	talkincode/gptstudio:latest .
+	docker push talkincode/gptstudio:latest
+
 
 .PHONY: clean build
