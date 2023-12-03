@@ -12,3 +12,5 @@ graphviz
 jinja2
 streamlit
 msal_streamlit_authentication
+opencv-python-headless
+

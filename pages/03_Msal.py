@@ -1,33 +1,12 @@
 import streamlit as st
-from msal_streamlit_authentication import msal_authentication
+import sys
 import os
+from libs.msal import msal_auth
 from dotenv import load_dotenv
+sys.path.append(os.path.abspath('..'))
 load_dotenv()
 
-MSAL_TENANTID = os.getenv("MSAL_TENANTID")
-MSAL_APPID = os.getenv("MSAL_APPID")
 
+value = msal_auth()
 
-st.session_state
-
-if "token" in st.session_state and st.session_state["token"]:
-    st.write("Token", st.session_state["token"])
-else:
-    value = msal_authentication(
-        auth={
-            "clientId": MSAL_APPID,
-            "authority": f"https://login.microsoftonline.com/{MSAL_TENANTID}",
-            "redirectUri": "/",
-            "postLogoutRedirectUri": "/"
-        },
-        cache={
-            "cacheLocation": "sessionStorage",
-            "storeAuthStateInCookie": False
-        },
-        login_request={
-            "scopes": [f"{MSAL_APPID}/.default"]
-        },
-        key=1)
-    st.session_state["token"] = value
-
-
+st.write(value)
