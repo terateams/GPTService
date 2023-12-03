@@ -11,3 +11,4 @@ pillow
 graphviz
 jinja2
 streamlit
+msal_streamlit_authentication
