@@ -24,8 +24,32 @@ services:
     networks:
       gptservice_network:
 
+  gptstudio:
+    container_name: "gptstudio"
+    image: talkincode/gptstudio:latest
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+    environment:
+        - OPENAI_API_TYPE=${OPENAI_API_TYPE}
+        - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+        - AZURE_OPENAI_API_BASE=${AZURE_OPENAI_API_BASE}
+        - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+        - OPENAI_API_KEY=${OPENAI_API_KEY}
+        - QDRANT_URL=${QDRANT_URL}
+        - DATA_DIR=/data
+    volumes:
+      - gptstudio-volume:/data
+    ports:
+      - "8898:80"
+    command: ["streamlit","run", "/GPTStudio.py"]
+    networks:
+      gptservice_network:
+
 networks:
   gptservice_network:
 
 volumes:
   gptservice-volume:
+  gptstudio-volume:

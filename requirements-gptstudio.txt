@@ -1,0 +1,13 @@
+pydantic
+python-dotenv
+tiktoken
+openai
+PyMuPDF
+langchain
+qdrant-client
+python-multipart
+pytesseract
+pillow
+graphviz
+jinja2
+streamlit
