@@ -9,9 +9,10 @@ from libs.http import search_knowledge
 from libs.msal import msal_auth
 
 if os.getenv("DEV_MODE") not in ["true", "1", "on"]:
-    value = msal_auth()
-    if value is None:
-        st.stop()
+    with st.sidebar:
+        value = msal_auth()
+        if value is None:
+            st.stop()
 
 knowledges = {
     "青少年编程": "codeboy",

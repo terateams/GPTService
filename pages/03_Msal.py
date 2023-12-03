@@ -7,6 +7,7 @@ sys.path.append(os.path.abspath('..'))
 load_dotenv()
 
 
-value = msal_auth()
+with st.sidebar:
+    value = msal_auth()
 
-st.write(value)
+    st.write(value)
