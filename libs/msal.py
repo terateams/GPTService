@@ -17,6 +17,7 @@ def msal_auth():
             "storeAuthStateInCookie": False
         },
         login_button_text="Microsoft Account Login",
+        logout_button_text="Microsoft Account Logout",
         login_request={
             "scopes": [f"{app_id}/.default"]
         },
