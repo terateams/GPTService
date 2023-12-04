@@ -2,6 +2,7 @@ import uuid
 
 import streamlit as st
 from st_audiorec import st_audiorec
+from audio_recorder_streamlit import audio_recorder
 from openai import OpenAI
 from pydub import AudioSegment
 from libs.msal import msal_auth
@@ -42,8 +43,9 @@ if uploaded_file is not None:
     st.session_state.audio_recode = string_data
 
 if st.session_state.audio_recode is None:
-    wav_audio_recode = st_audiorec()
+    wav_audio_recode = audio_recorder("点击录音", icon_size="2x", pause_threshold=3.0)
     if wav_audio_recode is not None:
+        st.audio(wav_audio_recode, format="audio/wav")
         with st.spinner('正在识别语音...', cache=True):
             audio_segment = AudioSegment.from_wav(io.BytesIO(wav_audio_recode))
             filename = os.path.join(data_dir, f"{uuid.uuid4()}.audio.wav")

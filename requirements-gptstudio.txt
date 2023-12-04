@@ -16,3 +16,4 @@ msal_streamlit_authentication
 opencv-python-headless
 streamlit_webrtc
 streamlit-audiorec
+audio-recorder-streamlit
