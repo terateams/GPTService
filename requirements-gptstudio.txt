@@ -11,6 +11,8 @@ pillow
 graphviz
 jinja2
 streamlit
+pydub
 msal_streamlit_authentication
 opencv-python-headless
-
+streamlit_webrtc
+streamlit-audiorec

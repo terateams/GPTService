@@ -2,7 +2,16 @@ import requests
 import os
 
 
+# 定义知识库名称和对应的集合名称
+knowledge_dictionary = {
+    "未选择": "",
+    "青少年编程": "codeboy",
+    "对数课堂": "logbot",
+}
+
+
 def search_knowledge(collection, query):
+    """Define a knowledge base retrieval function"""
     gpt_address = os.getenv("GPT_SERVICE_ADDRESS")
     api_token = os.getenv("GPT_SERVICE_TOKEN")
     url = f"{gpt_address}/knowledge/search"

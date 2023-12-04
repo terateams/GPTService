@@ -1,8 +1,12 @@
 from msal_streamlit_authentication import msal_authentication
 import os
 
+dev_token = {"msal_token":{}}
+
 
 def msal_auth():
+    if os.getenv("DEV_MODE") in ["true", "1", "on"]:
+        return dev_token
     tenant_id = os.getenv("MSAL_TENANTID")
     app_id = os.getenv("MSAL_APPID")
     return msal_authentication(
