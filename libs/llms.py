@@ -1,9 +1,10 @@
 from openai import OpenAI
+import os
 
 
 def openai_streaming(sysmsg, historys: list):
     """OpenAI Streaming API"""
-    client = OpenAI()
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     messages = [
         {"role": "system", "content": sysmsg},
     ]

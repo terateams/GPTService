@@ -48,7 +48,7 @@ if st.session_state.audio_recode is None:
             audio_segment = AudioSegment.from_wav(io.BytesIO(wav_audio_recode))
             filename = os.path.join(data_dir, f"{uuid.uuid4()}.audio.wav")
             audio_segment.export(filename, format="wav")
-            client = OpenAI()
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             transcript = client.audio.transcriptions.create(
                 model="whisper-1",
                 response_format="json",
@@ -63,7 +63,7 @@ if st.session_state.audio_recode is not None:
     sound = st.selectbox("选择音色", ["alloy", "echo", "fable", "onyx", "nova", "shimmer"])
     c1, c2, c3 = st.columns(3)
     if c1.button("合成语音"):
-        client = OpenAI()
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         speech_file_path = os.path.join(data_dir, f"{uuid.uuid4()}.speech.mp3")
         with st.status("正在合成语音", expanded=True) as status:
             response = client.audio.speech.create(
