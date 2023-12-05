@@ -1,5 +1,7 @@
 import streamlit as st
+from libs.msal import msal_auth
 
+msal_auth()
 
 def sidebar():
     st.sidebar.markdown("""

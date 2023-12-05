@@ -23,7 +23,7 @@ st.divider()
 if "knowledge_messages" not in st.session_state.keys():
     st.session_state.knowledge_messages = [{"role": "assistant", "content": "欢迎使用知识库检索， 请输入主题"}]
 
-collection = st.selectbox("选择知识库", knowledge_dictionary.keys())
+collection = st.sidebar.selectbox("选择知识库", knowledge_dictionary.keys())
 collection_value = knowledge_dictionary[collection]
 
 for knowledge_messages in st.session_state.knowledge_messages:
@@ -38,7 +38,7 @@ def clear_chat_history():
 st.sidebar.button('清除历史', on_click=clear_chat_history)
 
 if collection_value == "":
-    st.error("请选择知识库")
+    st.warning("请选择知识库")
     st.stop()
 
 if prompt := st.chat_input("输入检索主题"):

@@ -18,8 +18,7 @@ with st.sidebar:
 st.sidebar.markdown("# 💡Ta365 AI 助手")
 
 st.title("💡Ta365 AI 助手")
-st.markdown("> 一个通用型人工智能助手，可以帮助你解决各种问题。")
-st.divider()
+st.markdown("> 一个通用型人工智能助手，可以帮助你解决各种问题, 左侧栏可以选择知识库。")
 
 if "ta365_messages" not in st.session_state.keys():
     st.session_state.ta365_messages = [{"role": "assistant", "content": "我是 Ta365 AI 助手，欢迎提问"}]
@@ -37,7 +36,7 @@ def stop_streaming():
     st.session_state.ta365_last_user_msg_processed = True
 
 
-collection = st.selectbox("选择知识库", knowledge_dictionary.keys())
+collection = st.sidebar.selectbox("选择知识库", knowledge_dictionary.keys())
 collection_value = knowledge_dictionary[collection]
 
 for ta365_messages in st.session_state.ta365_messages:
@@ -49,8 +48,7 @@ def clear_chat_history():
     st.session_state.ta365_messages = [{"role": "assistant", "content": "我是 Ta365 AI 助手，欢迎提问"}]
 
 
-st.sidebar.button('清除历史', on_click=clear_chat_history)
-
+st.sidebar.button('清除对话历史', on_click=clear_chat_history)
 
 # 用户输入
 if prompt := st.chat_input("输入你的问题"):
@@ -66,6 +64,7 @@ stop_action = st.sidebar.empty()
 if not st.session_state.ta365_streaming_end:
     stop_action.button('停止输出', on_click=stop_streaming, help="点击此按钮停止流式输出")
 
+
 # 用户输入响应，如果上一条消息不是助手的消息，且上一条用户消息还没有处理完毕
 if (st.session_state.ta365_messages[-1]["role"] != "assistant"
         and not st.session_state.ta365_last_user_msg_processed):
@@ -75,6 +74,8 @@ if (st.session_state.ta365_messages[-1]["role"] != "assistant"
             kmsg = ""
             if collection_value not in "":
                 kmsg = search_knowledge(collection_value, prompt)
+            if kmsg != "":
+                st.expander("📚 知识库检索结果", expanded=False).markdown(kmsg)
             sysmsg = get_ta365_sysmsg(kmsg)
             response = openai_streaming(sysmsg, st.session_state.ta365_messages[-10:])
             # 流式输出
@@ -89,8 +90,7 @@ if (st.session_state.ta365_messages[-1]["role"] != "assistant"
                     full_response += text
                     placeholder.markdown(full_response)
             placeholder.markdown(full_response)
-            if kmsg != "":
-                st.expander("知识库检索结果", expanded=False).markdown(kmsg)
+
 
     stop_action.empty()
     # 用于标记流式输出已经结束
