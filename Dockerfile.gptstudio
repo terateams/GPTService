@@ -24,6 +24,7 @@ WORKDIR /app
 COPY ./GPTStudio.py ./GPTStudio.py
 COPY ./pages ./pages
 COPY ./libs ./libs
+COPY ./config.toml ./.streamlit/config.toml
 COPY ./components ./components
 COPY ./requirements-gptstudio.txt ./requirements.txt
 
