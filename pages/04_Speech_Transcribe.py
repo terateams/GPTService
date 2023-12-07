@@ -11,38 +11,51 @@ import sys
 import os
 from dotenv import load_dotenv
 
+from libs.session import PageSessionState
+
 sys.path.append(os.path.abspath('..'))
 load_dotenv()
+
+page_state = PageSessionState("speech_transcribe")
 
 with st.sidebar:
     value = msal_auth()
     if value is None:
         st.stop()
 
+st.sidebar.markdown("# 🎙️语音转录🎤")
 
 st.markdown("# 🎙️语音转录🎤")
 st.markdown("> 上传文本或者录制语音识别，然后合成新的语音")
 
-if "audio_recode" not in st.session_state:
-    st.session_state.audio_recode = None
+# 音频录制内容
+page_state.initn_attr("audio_recode", None)
+# 语音合成内容
+page_state.initn_attr("speech_recode", None)
+# 是否正在处理中
+page_state.initn_attr("audio_processing", False)
 
-if "speech_recode" not in st.session_state:
-    st.session_state.speech_recode = None
-
-if "audio_processing" not in st.session_state:
-    st.session_state.audio_processing = False
-
+# 用于存储临时文件
 data_dir = os.getenv("DATA_DIR", "/tmp/data")
 if not os.path.exists(data_dir):
     os.makedirs(data_dir)
 
-uploaded_file = st.file_uploader("上传文本文件", type=["txt", "md"])
+content_box = st.empty()
+
+uploaded_file = st.sidebar.file_uploader("上传文本文件", type=["txt", "md"])
 if uploaded_file is not None:
     stringio = io.StringIO(uploaded_file.getvalue().decode("utf-8"))
     string_data = stringio.read()
-    st.session_state.audio_recode = string_data
+    page_state.audio_recode = string_data
 
-if st.session_state.audio_recode is None:
+if st.sidebar.button("录制音频"):
+    page_state.audio_recode = None
+    page_state.audio_processing = False
+    page_state.speech_recode = None
+    content_box.empty()
+    st.rerun()
+
+if page_state.audio_recode is None:
     with st.spinner('正在识别语音...'):
         wav_audio_recode = audio_recorder("点击录音", icon_size="2x", pause_threshold=3.0)
         if wav_audio_recode is not None:
@@ -56,12 +69,11 @@ if st.session_state.audio_recode is None:
                 response_format="json",
                 file=open(filename, "rb"),
             )
-            st.session_state.audio_recode = transcript.text
+            page_state.audio_recode = transcript.text
             st.rerun()
 
-if st.session_state.audio_recode is not None:
-    st.markdown("### 🎤语音合成")
-    st.markdown(st.session_state.audio_recode)
+if page_state.audio_recode is not None:
+    content_box.markdown(page_state.audio_recode)
     sound = st.selectbox("选择音色", ["alloy", "echo", "fable", "onyx", "nova", "shimmer"])
     c1, c2, c3 = st.columns(3)
     if c1.button("合成语音"):
@@ -71,26 +83,20 @@ if st.session_state.audio_recode is not None:
             response = client.audio.speech.create(
                 model="tts-1",
                 voice=sound,
-                input=st.session_state.audio_recode
+                input=page_state.audio_recode
             )
-            st.session_state.speech_recode = response.read()
+            page_state.speech_recode = response.read()
             st.write(f"🎧{sound}音色")
-            st.audio(st.session_state.speech_recode, format="audio/mp3")
+            st.audio(page_state.speech_recode, format="audio/mp3")
             st.write(f"语音{sound}合成完成")
             status.update(label="语音合成完成!", state="complete")
 
-    if c2.button("重新录制"):
-        st.session_state.audio_recode = None
-        st.session_state.audio_processing = False
-        st.session_state.speech_recode = None
-        st.rerun()
-
-    if st.session_state.speech_recode is not None:
+    if page_state.speech_recode is not None:
         c3.download_button(
             label="下载语音",
-            data=st.session_state.speech_recode,
+            data=page_state.speech_recode,
             file_name='speech.mp3',
         )
 else:
-    if st.session_state.audio_processing:
+    if page_state.audio_processing:
         st.write("还有任务在处理")
