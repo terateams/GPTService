@@ -70,7 +70,7 @@ app = FastAPI(
     version="1.0.0",
     servers=[
         {"url": os.environ.get("GPTS_API_SERVER"), "description": "Production server"},
-        {"url": "http://127.0.0.1:8700", "description": "Develop server"},
+        {"url": "http://0.0.0.0:8700", "description": "Develop server"},
     ]
 )
 
