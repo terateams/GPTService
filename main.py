@@ -275,5 +275,5 @@ async def openai_analyze_image_api(
 if __name__ == "__main__":
     import uvicorn
 
-    webport = int(os.environ.get("WEB_PORT", 8700))
+    webport = int(os.environ.get("WEB_PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=webport)
