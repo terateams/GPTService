@@ -1,16 +1,14 @@
 import json
 import re
 import sys
-import uuid
-from typing import Dict, List, Optional
-
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except:
+    pass
 import logging
 import os
-import shutil
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import FileResponse
-from fastapi.responses import HTMLResponse
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
 from starlette import status
@@ -18,11 +16,8 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
-from tempfile import NamedTemporaryFile
-from fastapi import File, UploadFile
-from fastapi.responses import JSONResponse
 from concurrent.futures import ProcessPoolExecutor
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
 import asyncio
 
@@ -278,6 +273,5 @@ async def openai_analyze_image_api(
 
 if __name__ == "__main__":
     import uvicorn
-
     webport = int(os.environ.get("WEB_PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=webport)
