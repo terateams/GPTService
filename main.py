@@ -1,5 +1,6 @@
 import json
 import re
+import sys
 import uuid
 from typing import Dict, List, Optional
 
@@ -35,11 +36,14 @@ from common import (
     validate_api_key,
 )
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+log_formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-
+logging.basicConfig(level=logging.DEBUG if os.getenv("DEBUG") in ["1", "true"] else logging.INFO)
 log = logging.getLogger(__name__)
+console_handler = logging.StreamHandler(sys.stderr)
+console_handler.setFormatter(log_formatter)
+log.addHandler(console_handler)
 
 DATA_DIR = os.environ.get("DATA_DIR", "/home/data")
 if not os.path.exists(DATA_DIR):
