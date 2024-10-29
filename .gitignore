@@ -12,3 +12,4 @@ build
 /venv/
 /playground/chroma_db/
 /playground/local_qdrant/
+test.http
