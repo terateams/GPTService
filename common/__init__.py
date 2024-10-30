@@ -4,6 +4,10 @@ import os
 import os
 
 
+def md5hash(s: str) -> str:
+    import hashlib
+    return hashlib.md5(s.encode()).hexdigest()
+
 def validate_api_key(api_key, api_secret: str) -> bool:
     if api_key:
         try:

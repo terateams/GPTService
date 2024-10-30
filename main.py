@@ -1,6 +1,8 @@
 import json
 import re
 import sys
+
+from common.rediscache import RedisCache
 try:
     from dotenv import load_dotenv
 except:
@@ -26,6 +28,7 @@ from common.redisrag import RedisRag, tokens_len
 load_dotenv()
 
 from common import (
+    md5hash,
     openai_analyze_image,
     openai_async_text_generate,
     validate_api_key,
@@ -79,6 +82,8 @@ app.add_middleware(LimitUploadSize, max_upload_size=1024 * 1024 * 100)
 executor = ProcessPoolExecutor()
 
 templates = Jinja2Templates(directory="templates")
+
+cache = RedisCache(os.environ.get("REDIS_URL"))
 
 
 async def run_in_process(fn, *args):
@@ -169,6 +174,7 @@ async def redis_rag_search(
 ):
     """Search the knowledge base to return relevant content"""
     try:
+        cachekey = f"rag_{md5hash(query.query)}"
         vdb = RedisRag.get_vectordb(query.index)
         result = await vdb.amax_marginal_relevance_search(
             query.query, k=query.topk, return_metadata=True
@@ -180,15 +186,33 @@ async def redis_rag_search(
                 msg="ok",
             )
         data = [d.model_dump() for d in result]
+        datastr = json.dumps(data, ensure_ascii=False, indent=4)
+        cache.set_cache(cachekey, datastr, expire=3600 * 24 * 365)
+        source = f"{os.getenv('GPTS_API_SERVER')}/api/knowledge/cache/{cachekey}"
         return RestResult(
             code=0,
             msg="ok",
-            result=dict(data=data, tokens=tokens_len(json.dumps(data))),
+            result=dict(data=data, tokens=tokens_len(datastr), source_url=source),
         )
     except Exception as e:
         import traceback
-
         traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get(
+    "/api/knowledge/cache/{haskkey}",
+    summary="query the knowledge cache byhash",
+    description="query the knowledge cache by hash",
+    include_in_schema=False
+)
+async def redis_rag_cache(haskkey: str, request: Request):
+    """fetch the knowledge cache by hash"""
+    try:
+        data = cache.get_cache(haskkey)
+        if not data:
+            return templates.TemplateResponse("jsonviewer.html", {"request": request, "data": "cache not found"})
+        return templates.TemplateResponse("jsonviewer.html", {"request": request, "data": data})
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
