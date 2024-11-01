@@ -29,6 +29,7 @@ load_dotenv()
 
 from common import (
     md5hash,
+    openai_agenerate_image,
     openai_analyze_image,
     openai_async_text_generate,
     validate_api_key,
@@ -294,6 +295,67 @@ async def openai_analyze_image_api(
             msg=str(e),
             result={},
         )
+
+
+class ImageGenerate(BaseModel):
+    prompt: str = Field(
+        ..., description="The user's input prompt for generating an image."
+    )
+    quality: str = Field(
+        "standard",
+        description="The quality of the generated image. Defaults to 'standard'.",
+    )
+    size: str = Field(
+        "1024x1024",
+        description="The size of the generated image. Defaults to '1024x1024'.",
+    )
+    style: str = Field(
+        "vivid",
+        description="The style of the generated image. Defaults to 'vivid'.",
+    )
+    container_name: str = Field(
+        "images",
+        description="The Azure Blob container name where the image will be stored. Defaults to 'images'.",
+    )
+    expiry_hours: int = Field(
+        24 * 365,
+        description="The number of hours the image URL will be valid. Defaults to 48 hours.",
+    )
+
+@app.api_route(
+    "/api/openai/image/generate",
+    methods=["POST"],
+    summary="image generate",
+    description="generate an image using openai",
+)
+async def openai_generate_image_api(
+    req: ImageGenerate,
+    td: TokenData = Depends(verify_api_key),
+):
+    logging.info("openai_generate_image HTTP trigger function processed a request.")
+    try:
+        blob_urls = await openai_agenerate_image(
+            prompt=req.prompt,
+            quality=req.quality,
+            size=req.size,
+            style=req.style,
+            container_name=req.container_name,
+            expiry_hours=req.expiry_hours,
+        )
+        response = {"data": blob_urls}
+        return RestResult(
+            code=0,
+            msg="ok",
+            result=response,
+        )
+    except Exception as e:
+        return RestResult(
+            code=500,
+            msg=str(e),
+            result={},
+        )
+
+
 
 if __name__ == "__main__":
     import uvicorn

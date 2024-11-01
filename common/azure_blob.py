@@ -30,13 +30,13 @@ def get_blob_service(conn_str: str = None):
     return BlobServiceClient.from_connection_string(conn_str=_conn_str)
 
 
-def generate_blob_rl_sas(container, blob_name, permission, expiry_hours):
+def generate_blob_rl_sas(container_name, blob_name, permission, expiry_hours):
     _conn_str = os.environ.get("AZURE_BLOB_CONNECT_STR")
     account_name, account_key = parse_account_info(_conn_str)
     sas_blob = generate_blob_sas(
         account_name=account_name,
         blob_name=blob_name,
-        container_name=container.container_name,
+        container_name=container_name,
         account_key=account_key,
         permission=permission,
         expiry=datetime.now(UTC) + timedelta(hours=expiry_hours),
@@ -44,16 +44,16 @@ def generate_blob_rl_sas(container, blob_name, permission, expiry_hours):
     return sas_blob
 
 
-def generate_blob_rl_sas_url(container, blob_name, expiry_hours):
+def generate_blob_rl_sas_url(container_name, blob_name, expiry_hours):
     _conn_str = os.environ.get("AZURE_BLOB_CONNECT_STR")
     account_name, account_key = parse_account_info(_conn_str)
     sas_blob = generate_blob_rl_sas(
-        container=container,
+        container_name,
         blob_name=blob_name,
         permission="rl",
         expiry_hours=expiry_hours,
     )
-    return f"https://{account_name}.blob.core.windows.net/{container.container_name}/{blob_name}?{sas_blob}"
+    return f"https://{account_name}.blob.core.windows.net/{container_name}/{blob_name}?{sas_blob}"
 
 
 async def upload_blob_text(
@@ -110,7 +110,7 @@ async def upload_blobfile(
                     url
                     + "?"
                     + generate_blob_rl_sas(
-                        container=container_client,
+                        container_client.container_name,
                         blob_name=blob_name,
                         permission="r",
                         expiry_hours=expiry_hours,
