@@ -186,7 +186,12 @@ async def redis_rag_search(
                 code=200,
                 msg="ok",
             )
-        data = [d.model_dump() for d in result]
+        data = []
+        for r in result:
+            item = r[0].model_dump()
+            item["score"] = r[1]
+            data.append(item)
+
         datastr = json.dumps(data, ensure_ascii=False, indent=4)
         cache.set_cache(cachekey, datastr, expire=3600 * 24 * 365)
         source = f"{os.getenv('GPTS_API_SERVER')}/api/knowledge/cache/{cachekey}"
