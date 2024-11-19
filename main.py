@@ -177,7 +177,7 @@ async def redis_rag_search(
     try:
         cachekey = f"rag_{md5hash(query.query)}"
         vdb = RedisRag.get_vectordb(query.index)
-        result = await vdb.amax_marginal_relevance_search(
+        result = await vdb.asimilarity_search_with_relevance_scores(
             query.query, k=query.topk, return_metadata=True
         )
         if not result:
