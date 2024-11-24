@@ -2,7 +2,7 @@ import json
 import re
 import sys
 import uuid
-
+import traceback
 import aiofiles
 
 from common.rediscache import RedisCache
@@ -476,7 +476,7 @@ async def translate_text(
             result={"data": target}
         )
     except Exception as e:
-        log.error(e)
+        traceback.print_exc()
         return RestResult(
             code=500, 
             msg=str(e),
@@ -535,6 +535,7 @@ async def translate_document(
         
     except Exception as e:
         log.error(f"Document translation error: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(
             status_code=500,
             detail=f"Translation failed: {str(e)}"
