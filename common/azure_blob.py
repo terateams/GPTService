@@ -6,23 +6,9 @@ from azure.storage.blob.aio import BlobServiceClient
 from azure.storage.blob.aio import BlobClient
 from azure.storage.blob.aio import ContainerClient
 from azure.storage.blob import generate_blob_sas
+from common.utils import parse_azureblob_account_info
 import os
 
-
-def parse_account_info(conn_str: str = None):
-    # 获取连接字符串
-    _conn_str = conn_str or os.environ.get("AZURE_BLOB_CONNECT_STR")
-    # 将连接字符串分割为各个部分
-    parts = _conn_str.split(";")
-    # 提取 AccountName 和 AccountKey
-    account_info = {}
-    for part in parts:
-        if "AccountName=" in part:
-            account_info["AccountName"] = part.split("=", 1)[1]
-        elif "AccountKey=" in part:
-            account_info["AccountKey"] = part.split("=", 1)[1]
-
-    return account_info["AccountName"], account_info["AccountKey"]
 
 
 def get_blob_service(conn_str: str = None):
@@ -32,7 +18,7 @@ def get_blob_service(conn_str: str = None):
 
 def generate_blob_rl_sas(container_name, blob_name, permission, expiry_hours):
     _conn_str = os.environ.get("AZURE_BLOB_CONNECT_STR")
-    account_name, account_key = parse_account_info(_conn_str)
+    account_name, account_key = parse_azureblob_account_info(_conn_str)
     sas_blob = generate_blob_sas(
         account_name=account_name,
         blob_name=blob_name,
@@ -46,7 +32,7 @@ def generate_blob_rl_sas(container_name, blob_name, permission, expiry_hours):
 
 def generate_blob_rl_sas_url(container_name, blob_name, expiry_hours):
     _conn_str = os.environ.get("AZURE_BLOB_CONNECT_STR")
-    account_name, account_key = parse_account_info(_conn_str)
+    account_name, account_key = parse_azureblob_account_info(_conn_str)
     sas_blob = generate_blob_rl_sas(
         container_name,
         blob_name=blob_name,

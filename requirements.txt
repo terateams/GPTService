@@ -16,3 +16,10 @@ redis==5.1.1
 tiktoken
 pyjwt
 azure-storage-blob
+diskcache
+azure-ai-translation-document
+azure-ai-translation-text
+azure-cognitiveservices-speech
+srt
+pydub
+aiofiles

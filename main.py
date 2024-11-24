@@ -1,15 +1,22 @@
 import json
 import re
 import sys
+import uuid
+
+import aiofiles
 
 from common.rediscache import RedisCache
+from common.translate import get_translate
+
 try:
     from dotenv import load_dotenv
+    load_dotenv()
 except:
     pass
+
 import logging
 import os
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
@@ -21,24 +28,32 @@ from starlette.types import ASGIApp
 from concurrent.futures import ProcessPoolExecutor
 from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
+from typing import Any, Dict, Optional
 import asyncio
 
 from common.redisrag import RedisRag, tokens_len
 
-load_dotenv()
 
-from common import (
+
+from common.utils import (
     md5hash,
-    openai_agenerate_image,
-    openai_analyze_image,
-    openai_async_text_generate,
     validate_api_key,
+)
+from common.openai import (
+    openai_async_text_generate,
+    openai_analyze_image,
+    openai_agenerate_image,
 )
 
 log_formatter = logging.Formatter(
     "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-logging.basicConfig(level=logging.DEBUG if os.getenv("DEBUG") in ["1", "true"] else logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG if os.getenv("DEBUG") in ["1", "true"] else logging.INFO
+)
 log = logging.getLogger(__name__)
 console_handler = logging.StreamHandler(sys.stderr)
 console_handler.setFormatter(log_formatter)
@@ -112,6 +127,21 @@ class RestResult(BaseModel):
         title="Return data (optional)",
         description="Return data (optional), textual content or structured data",
     )
+    
+    @staticmethod 
+    def success(data: Any = None) -> Dict:
+        return {
+            "code": 0,
+            "msg": "success",
+            "data": data
+        }
+    
+    @staticmethod
+    def error(msg: str) -> Dict:
+        return {
+            "code": -1,
+            "msg": msg
+        }
 
 
 API_SECRET = os.environ.get("API_SECRET")
@@ -202,22 +232,28 @@ async def redis_rag_search(
         )
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get(
     "/api/knowledge/cache/{haskkey}",
     summary="query the knowledge cache byhash",
     description="query the knowledge cache by hash",
-    include_in_schema=False
+    include_in_schema=False,
 )
 async def redis_rag_cache(haskkey: str, request: Request):
     """fetch the knowledge cache by hash"""
     try:
         data = cache.get_cache(haskkey)
         if not data:
-            return templates.TemplateResponse("jsonviewer.html", {"request": request, "data": "cache not found"})
-        return templates.TemplateResponse("jsonviewer.html", {"request": request, "data": data})
+            return templates.TemplateResponse(
+                "jsonviewer.html", {"request": request, "data": "cache not found"}
+            )
+        return templates.TemplateResponse(
+            "jsonviewer.html", {"request": request, "data": data}
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -234,13 +270,14 @@ class TextGenerate(BaseModel):
         "gpt-4o",
         description="The model name to be used for text generation. Defaults to 'gpt-4o'.",
     )
+    temperature: Optional[float] = Field(0.7, description="The temperature")
 
 
 @app.api_route(
     "/api/openai/text/generate",
     methods=["GET", "POST"],
     summary="query the knowledge base",
-    description="query the knowledge base for relevant content",
+    description="openai text generate",
 )
 async def openai_text_generate_api(
     tg: TextGenerate,
@@ -262,6 +299,37 @@ async def openai_text_generate_api(
             msg=str(e),
             result={},
         )
+
+
+@app.post("/api/openai/text/streaming", response_description="OpenAI text generation")
+async def openai_generate(
+    request: TextGenerate, td: TokenData = Depends(verify_api_key)
+):
+    sysmsg = request.sysmsg
+    prompt = request.prompt
+    model = request.model
+    temperature = round(request.temperature, 1)
+
+    async def event_generator():
+        try:
+            stream_result = await openai_async_text_generate(
+                sysmsg=sysmsg,
+                prompt=prompt,
+                model=model,
+                streaming=True,
+                temperature=temperature,
+            )
+            async for chunk in stream_result:
+                if chunk.choices:
+                    data = f"data: {chunk.choices[0].delta.model_dump_json()}\n\n"
+                    yield data.encode("utf-8")
+            # [DONE]
+            yield f"data: [DONE]\n\n".encode("utf-8")
+        except Exception as e:
+            log.error(f"Error: {str(e)}")
+            yield f"data: {str(e)}\n\n".encode("utf-8")
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 class ImageAnalyze(BaseModel):
@@ -327,6 +395,7 @@ class ImageGenerate(BaseModel):
         description="The number of hours the image URL will be valid. Defaults to 48 hours.",
     )
 
+
 @app.api_route(
     "/api/openai/image/generate",
     methods=["POST"],
@@ -361,9 +430,120 @@ async def openai_generate_image_api(
         )
 
 
+# 定义请求模型
+class TokenRequest(BaseModel):
+    content: str = Field("", description="The content to count tokens for")
+
+
+@app.post(
+    "/api/openai/stat/token",
+    summary="Count tokens in content",
+    description="Calculate the number of tokens in the provided content",
+)
+async def openai_stat_token(
+    request: TokenRequest, td: TokenData = Depends(verify_api_key)
+):
+    try:
+        length = tokens_len(request.content)
+        return RestResult(code=0, msg="ok", result={"data": length})
+    except Exception as e:
+        return RestResult(code=500, msg=str(e), result={})
+
+
+# 定义翻译请求模型
+class TranslateRequest(BaseModel):
+    text: str = Field(..., description="The text to translate")
+    to: str = Field(..., description="The target language")
+
+@app.post(
+    "/api/azure/translate",
+    summary="Translate text",
+    description="Translate text to target language"
+)
+async def translate_text(
+    request: TranslateRequest,
+    td: TokenData = Depends(verify_api_key)
+):
+    try:
+        translate = get_translate()
+        target = await translate.translate_text(
+            request.text, 
+            request.to
+        )
+        return RestResult(
+            code=0,
+            msg="ok",
+            result={"data": target}
+        )
+    except Exception as e:
+        log.error(e)
+        return RestResult(
+            code=500, 
+            msg=str(e),
+            result={}
+        )
+
+
+
+@app.post(
+    "/api/azure/translate/document",
+    summary="Translate document",
+    description="Translate uploaded document to target language"
+)
+async def translate_document(
+    file: UploadFile = File(...),
+    target_lang: str = Form(...),
+    td: TokenData = Depends(verify_api_key)
+) -> Dict:
+    """
+    翻译上传的文档
+    
+    Parameters:
+        file: 要翻译的文件
+        target_lang: 目标语言代码
+        td: API token 验证
+    """
+    try:
+        # 创建临时文件目录
+        filedir = os.path.join(os.environ.get('DATA_DIR', '/tmp'), 'translate')
+        os.makedirs(filedir, exist_ok=True)
+        
+        # 保存上传的文件
+        doc_file = os.path.join(filedir, file.filename)
+        size = 0
+        
+        async with aiofiles.open(doc_file, "wb") as f:
+            while chunk := await file.read(8192):  # 每次读取8KB
+                size += len(chunk)
+                await f.write(chunk)
+                
+        if size == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="File is empty"
+            )
+            
+        # 执行文档翻译
+        translate = get_translate()
+        docs = await translate.translate_documents(
+            uuid.uuid4().hex,
+            doc_file,
+            target_lang
+        )
+        
+        return RestResult.success(data=docs)
+        
+    except Exception as e:
+        log.error(f"Document translation error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Translation failed: {str(e)}"
+        )
+
+
 
 if __name__ == "__main__":
     import uvicorn
+
     webport = int(os.environ.get("WEB_PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=webport)
-

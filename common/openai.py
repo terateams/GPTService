@@ -3,33 +3,12 @@ import logging
 import tempfile
 import uuid
 import aiohttp
-import jwt
 from openai import AsyncAzureOpenAI
 import os
-import os
 
-from common.azure_blob import generate_blob_rl_sas_url, upload_blob_text, upload_blobfile
-
+from common.azure_blob import generate_blob_rl_sas_url, upload_blobfile
 
 log = logging.getLogger(__name__)
-
-
-
-def md5hash(s: str) -> str:
-    import hashlib
-    return hashlib.md5(s.encode()).hexdigest()
-
-def validate_api_key(api_key, api_secret: str) -> bool:
-    if api_key:
-        try:
-            payload = jwt.decode(api_key, api_secret, algorithms=['HS256'])
-            uid = payload.get('uid')
-            if uid in ["gptservice","teamstools","teamscode"]:
-                return True
-        except Exception as e:
-            return False
-    return False
-
 
 
 def get_openai_client():
@@ -48,7 +27,7 @@ def get_openai_imagine_client():
         api_version=os.getenv("IMAGINE_AZURE_OPENAI_API_VERSION"),
     )
 
-async def openai_async_text_generate(sysmsg, prompt, model: str) -> str:
+async def openai_async_text_generate(sysmsg, prompt, model: str, temperature: float = 0.7, streaming: bool = False) -> str:
     """OpenAI API"""
     client = get_openai_client()
     messages = [
@@ -56,9 +35,11 @@ async def openai_async_text_generate(sysmsg, prompt, model: str) -> str:
         {"role": "user", "content": prompt},
     ]
     response = await client.chat.completions.create(
-        model=model, messages=messages, stream=False
+        model=model, messages=messages, stream=streaming, temperature=temperature
     )
-    return response.choices[0].message.content
+    if not streaming:
+        return response.choices[0].message.content
+    return response
 
 
 async def openai_async_json_generate(sysmsg, prompt, model: str) -> str:
