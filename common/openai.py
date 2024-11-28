@@ -42,16 +42,23 @@ async def openai_async_text_generate(sysmsg, prompt, model: str, temperature: fl
     return response
 
 
-async def openai_async_json_generate(sysmsg, prompt, model: str) -> str:
+async def openai_async_json_generate(sysmsg, prompt, model: str, schema: dict = None) -> str:
     """OpenAI API"""
     client = get_openai_client()
     messages = [
         {"role": "system", "content": sysmsg},
         {"role": "user", "content": prompt},
     ]
+    json_schema = {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "math_response",
+            "schema": schema,
+        }
+    }
     response = await client.chat.completions.create(
         model=model,
-        response_format={"type": "json_object"},
+        response_format=json_schema if schema else {"type": "json_object"},
         messages=messages,
         stream=False
     )

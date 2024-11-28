@@ -31,7 +31,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 import asyncio
 
 from common.redisrag import RedisRag, tokens_len
@@ -44,6 +44,7 @@ from common.utils import (
 )
 from common.openai import (
     openai_async_text_generate,
+    openai_async_json_generate,
     openai_analyze_image,
     openai_agenerate_image,
 )
@@ -276,7 +277,7 @@ class TextGenerate(BaseModel):
 @app.api_route(
     "/api/openai/text/generate",
     methods=["GET", "POST"],
-    summary="query the knowledge base",
+    summary="openai text generate",
     description="openai text generate",
 )
 async def openai_text_generate_api(
@@ -292,6 +293,56 @@ async def openai_text_generate_api(
             code=0,
             msg="ok",
             result=response,
+        )
+    except Exception as e:
+        return RestResult(
+            code=500,
+            msg=str(e),
+            result={},
+        )
+
+
+class JsonGenerate(BaseModel):
+    sysmsg: str = Field(
+        ...,
+        description="System message that provides context or instructions for the model's behavior.",
+    )
+    prompt: str = Field(
+        ..., description="The user's input prompt that the model will respond to."
+    )
+    schema: Union[Dict] = Field(
+        default=None,  # 使用 default 参数设置默认值
+        description="The schema of the response format. Can be string or dict.",
+        example={
+            "type": "object",
+            "properties": {
+                "result": {"type": "string"}
+            }
+        }
+    )
+    model: str = Field(
+        "gpt-4o",
+        description="The model name to be used for text generation. Defaults to 'gpt-4o'.",
+    )
+
+@app.api_route(
+    "/api/openai/json/generate",
+    methods=["GET", "POST"],
+    summary="openai json generate",
+    description="openai json generate",
+)
+async def openai_json_generate_api(
+    tg: JsonGenerate,
+    td: TokenData = Depends(verify_api_key),
+):
+    logging.info("openai_json_generate HTTP trigger function processed a request.")
+
+    try:
+        result = await openai_async_json_generate(tg.sysmsg, tg.prompt, tg.model, schema=tg.schema)
+        return RestResult(
+            code=0,
+            msg="ok",
+            result=json.loads(result),
         )
     except Exception as e:
         return RestResult(
