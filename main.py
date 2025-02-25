@@ -88,6 +88,8 @@ app = FastAPI(
     title="GPTService API",
     description="gptservice api",
     version="1.0.0",
+    docs_url=None, 
+    redoc_url=None
     servers=[
         {"url": os.environ.get("GPTS_API_SERVER"), "description": "Production server"},
         {"url": "http://0.0.0.0:8700", "description": "Develop server"},
